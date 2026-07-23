@@ -159,6 +159,20 @@ struct JobPollResult: Codable {
     var error: String?
 }
 
+struct TextJobQueued: Codable {
+    var ok: Bool
+    var id: String?
+    var error: String?
+}
+
+struct TextJobResult: Codable {
+    var pending: Bool?
+    var ok: Bool?
+    var kind: String?
+    var text: String?
+    var error: String?
+}
+
 struct EmptyResponse: Codable {}
 
 struct CertInfo: Codable, Identifiable {

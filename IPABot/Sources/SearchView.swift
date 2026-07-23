@@ -17,6 +17,12 @@ struct SearchView: View {
     @State private var signingBundleId: String?
     @State private var signAlert: SignAlert?
     @State private var history: [String] = []
+    @State private var textJob: TextJobTarget?
+
+    struct TextJobTarget: Identifiable {
+        let id: String
+        let title: String
+    }
 
     struct SignAlert: Identifiable {
         let id = UUID()
@@ -94,6 +100,7 @@ struct SearchView: View {
                 TrendingView { term in query = term; Task { await runSearch() } }
             }
             .sheet(item: $shareTarget) { target in ShareSheet(items: [target.url]) }
+            .sheet(item: $textJob) { target in TextJobResultView(title: target.title, jobId: target.id) }
             .alert(item: $signAlert) { alert in
                 Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
             }
@@ -153,6 +160,12 @@ struct SearchView: View {
             onSign: canDeliver(hit) ? { Task { await signDirect(hit) } } : nil,
             onInject: canDeliver(hit) ? { injectTarget = hit } : nil
         )
+        .contextMenu {
+            if canDeliver(hit) {
+                Button { Task { await queueInspect(hit) } } label: { Label("Inspect", systemImage: "wrench.and.screwdriver") }
+                Button { Task { await queueEntitlements(hit) } } label: { Label("Entitlements", systemImage: "lock.shield") }
+            }
+        }
     }
 
     private func canDeliver(_ hit: Hit) -> Bool {
@@ -169,6 +182,22 @@ struct SearchView: View {
             signAlert = SignAlert(message: error.localizedDescription)
         }
         signingBundleId = nil
+    }
+
+    private func queueInspect(_ hit: Hit) async {
+        do {
+            let r = try await api.inspect(ipaUrl: hit.download_url, ipaName: hit.app_name, vaultMsgId: hit.vault_msg_id)
+            if let id = r.id { textJob = TextJobTarget(id: id, title: "Inspect — \(hit.app_name)") }
+            else { errorMessage = r.error ?? "Couldn't queue inspect." }
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    private func queueEntitlements(_ hit: Hit) async {
+        do {
+            let r = try await api.entitlements(ipaUrl: hit.download_url, ipaName: hit.app_name, vaultMsgId: hit.vault_msg_id)
+            if let id = r.id { textJob = TextJobTarget(id: id, title: "Entitlements — \(hit.app_name)") }
+            else { errorMessage = r.error ?? "Couldn't queue entitlements." }
+        } catch { errorMessage = error.localizedDescription }
     }
 
     private func downloadAction(for hit: Hit) -> (() -> Void)? {

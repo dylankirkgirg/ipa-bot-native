@@ -190,6 +190,22 @@ final class APIClient: ObservableObject {
         try await get("/api/certs")
     }
 
+    func inspect(ipaUrl: String, ipaName: String, vaultMsgId: Int? = nil) async throws -> TextJobQueued {
+        var body: [String: Any] = ["ipa_url": ipaUrl, "ipa_name": ipaName]
+        if let vaultMsgId { body["vault_msg_id"] = vaultMsgId }
+        return try await post("/api/inspect", body: body)
+    }
+
+    func entitlements(ipaUrl: String, ipaName: String, vaultMsgId: Int? = nil) async throws -> TextJobQueued {
+        var body: [String: Any] = ["ipa_url": ipaUrl, "ipa_name": ipaName]
+        if let vaultMsgId { body["vault_msg_id"] = vaultMsgId }
+        return try await post("/api/entitlements", body: body)
+    }
+
+    func textJobResult(id: String) async throws -> TextJobResult {
+        try await get("/api/textjob-result", query: ["id": id])
+    }
+
     func decrypt(url: String) async throws -> InjectResult {
         try await post("/api/decrypt", body: ["url": url])
     }
