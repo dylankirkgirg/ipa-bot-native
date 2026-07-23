@@ -20,7 +20,7 @@ struct LibraryView: View {
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
-                Section("Starred (\(stars.count))") {
+                Section {
                     if stars.isEmpty {
                         Text("No starred apps yet.").foregroundStyle(.secondary)
                     }
@@ -33,8 +33,9 @@ struct LibraryView: View {
                     .onDelete { indexSet in
                         Task { await unstar(at: indexSet) }
                     }
-                }
-                Section("Watches (\(watches.count))") {
+                } header: { header("Starred", count: stars.count, icon: "star.fill") }
+
+                Section {
                     HStack {
                         TextField("Add a watch term", text: $newWatchTerm)
                             .textInputAutocapitalization(.never)
@@ -50,9 +51,10 @@ struct LibraryView: View {
                     .onDelete { indexSet in
                         Task { await removeWatch(at: indexSet) }
                     }
-                }
+                } header: { header("Watches", count: watches.count, icon: "eye.fill") }
+
                 if !presets.isEmpty {
-                    Section("Presets (\(presets.count))") {
+                    Section {
                         ForEach(presets) { p in
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(p.name).font(.headline)
@@ -62,10 +64,10 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removePresets(at: indexSet) }
                         }
-                    }
+                    } header: { header("Presets", count: presets.count, icon: "square.stack.3d.up.fill") }
                 }
                 if !sources.isEmpty {
-                    Section("Sources (\(sources.count))") {
+                    Section {
                         ForEach(sources) { s in
                             HStack {
                                 Text(s.emoji ?? "📦")
@@ -78,10 +80,10 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removeSources(at: indexSet) }
                         }
-                    }
+                    } header: { header("Sources", count: sources.count, icon: "tray.2.fill") }
                 }
                 if !notes.isEmpty {
-                    Section("Notes (\(notes.count))") {
+                    Section {
                         ForEach(notes) { n in
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(n.bundle).font(.caption).foregroundStyle(.secondary)
@@ -91,10 +93,10 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removeNotes(at: indexSet) }
                         }
-                    }
+                    } header: { header("Notes", count: notes.count, icon: "note.text") }
                 }
                 if !pins.isEmpty {
-                    Section("Pins (\(pins.count))") {
+                    Section {
                         ForEach(pins) { p in
                             HStack {
                                 Text(p.bundle)
@@ -105,10 +107,10 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removePins(at: indexSet) }
                         }
-                    }
+                    } header: { header("Pins", count: pins.count, icon: "pin.fill") }
                 }
                 if !aliases.isEmpty {
-                    Section("Aliases (\(aliases.count))") {
+                    Section {
                         ForEach(aliases) { a in
                             HStack {
                                 Text(a.short).font(.headline)
@@ -118,10 +120,10 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removeAliases(at: indexSet) }
                         }
-                    }
+                    } header: { header("Aliases", count: aliases.count, icon: "at") }
                 }
                 if !tfWatches.isEmpty {
-                    Section("TestFlight Watches (\(tfWatches.count))") {
+                    Section {
                         ForEach(tfWatches) { t in
                             HStack {
                                 Text(t.name ?? t.url)
@@ -132,7 +134,7 @@ struct LibraryView: View {
                         .onDelete { indexSet in
                             Task { await removeTfWatches(at: indexSet) }
                         }
-                    }
+                    } header: { header("TestFlight Watches", count: tfWatches.count, icon: "airplane") }
                 }
             }
             .navigationTitle("Library")
@@ -140,6 +142,11 @@ struct LibraryView: View {
             .refreshable { await load() }
             .overlay { if isLoading { ProgressView() } }
         }
+    }
+
+    @ViewBuilder
+    private func header(_ title: String, count: Int, icon: String) -> some View {
+        Label("\(title) (\(count))", systemImage: icon)
     }
 
     private func load() async {
