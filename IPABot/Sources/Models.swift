@@ -185,6 +185,49 @@ struct SearchHistoryResponse: Codable {
     var history: [String]
 }
 
+struct DiffResponse: Codable {
+    var query: String
+    var vanilla: [DiffRow]
+    var modded: [DiffRow]
+}
+
+struct DiffRow: Codable, Identifiable {
+    var source: String
+    var emoji: String
+    var app_name: String
+    var version: String
+    var bundle: String
+    var modded: Bool
+    var size_mb: Double
+    var date_iso: String
+    var id: String { "\(source)|\(version)|\(bundle)" }
+}
+
+struct ChangelogResponse: Codable {
+    var app_name: String
+    var source: String
+    var versions: [ChangelogVersion]
+}
+
+struct ChangelogVersion: Codable, Identifiable {
+    var version: String
+    var date: String?
+    var notes: String?
+    var id: String { version }
+}
+
+struct DiscoverResponse: Codable {
+    var artist_name: String?
+    var apps: [DiscoverApp]
+}
+
+struct DiscoverApp: Codable, Identifiable {
+    var bundle_id: String
+    var app_name: String
+    var hit: Hit?
+    var id: String { bundle_id }
+}
+
 struct BulkActionResult: Codable {
     var ok: Bool
     var queued: Int?
@@ -239,4 +282,5 @@ struct StatusResponse: Codable {
     var signCount: Int
     var vaultEntries: Int
     var build: String
+    var autosign: Bool?
 }
