@@ -125,6 +125,11 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.segmented)
+                    NavigationLink {
+                        ReorderTabsView()
+                    } label: {
+                        Label("Reorder Tabs", systemImage: "arrow.up.arrow.down")
+                    }
                 } header: {
                     Label("Appearance", systemImage: "circle.lefthalf.filled")
                 }
