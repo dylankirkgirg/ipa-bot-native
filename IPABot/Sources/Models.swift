@@ -204,6 +204,7 @@ struct AboutInfo: Codable {
     var latest_version: String?
     var latest_date: String?
     var source_count: Int
+    var source_names: [String]?
     var vault_count: Int
     var starred: Bool
     var pinned_version: String?
