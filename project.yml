@@ -23,3 +23,37 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: IPABot
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    info:
+      path: Generated/IPABot-Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [ipabot]
+            CFBundleURLName: com.dylankirkgirg.ipabot.native
+    dependencies:
+      - target: IPABotShare
+        embed: true
+
+  IPABotShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ShareExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dylankirkgirg.ipabot.native.share
+        GENERATE_INFOPLIST_FILE: YES
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: "Sign with IPABot"
+    info:
+      path: Generated/IPABotShare-Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true

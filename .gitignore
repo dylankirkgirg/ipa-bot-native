@@ -1,5 +1,6 @@
 .DS_Store
 IPABot.xcodeproj/
+Generated/
 build/
 DerivedData/
 *.xcuserstate

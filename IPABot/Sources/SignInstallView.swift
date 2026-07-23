@@ -5,7 +5,7 @@ struct SignInstallView: View {
     @State private var cert: CertInfo?
     @State private var pickerActive = false
 
-    @State private var ipaUrl = ""
+    @State private var ipaUrl: String
     @State private var appName = ""
     @State private var isUploading = false
     @State private var uploadedName: String?
@@ -15,6 +15,10 @@ struct SignInstallView: View {
     @State private var isBusy = false
     @State private var statusNote: String?
     @State private var errorMessage: String?
+
+    init(prefillURL: String = "") {
+        _ipaUrl = State(initialValue: prefillURL)
+    }
 
     var body: some View {
         NavigationStack {
