@@ -6,6 +6,7 @@ struct InjectView: View {
     let hit: Hit
 
     @State private var tweaks: [Tweak] = []
+    @State private var presets: [PresetEntry] = []
     @State private var selected: Set<String> = []
     @State private var isLoadingTweaks = false
     @State private var errorMessage: String?
@@ -25,6 +26,22 @@ struct InjectView: View {
                     Section {
                         Label(statusNote, systemImage: isBusy ? "hourglass" : "checkmark.circle.fill")
                             .foregroundStyle(isBusy ? Color.secondary : Color.green)
+                    }
+                }
+                if !presets.isEmpty {
+                    Section("Presets") {
+                        ForEach(presets) { preset in
+                            Button {
+                                selected = Set(preset.tweaks)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "square.stack.3d.up.fill")
+                                    Text(preset.name).foregroundStyle(.primary)
+                                    Spacer()
+                                    Text("\(preset.tweaks.count)").foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                 }
                 Section("Tweaks") {
@@ -78,6 +95,7 @@ struct InjectView: View {
         isLoadingTweaks = true
         do {
             tweaks = try await api.tweaks().tweaks
+            presets = try await api.library().presets ?? []
         } catch {
             errorMessage = error.localizedDescription
         }
