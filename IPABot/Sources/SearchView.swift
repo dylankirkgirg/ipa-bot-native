@@ -23,21 +23,18 @@ struct SearchView: View {
                         }
                     }
                 }
-                ForEach(hits) { hit in
-                    HitRow(
-                        hit: hit,
-                        onStar: { Task { await toggleStar(hit) } },
-                        onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) },
-                        onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
-                    )
-                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                Section {
+                    ForEach(hits) { hit in
+                        HitRow(
+                            hit: hit,
+                            onStar: { Task { await toggleStar(hit) } },
+                            onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) },
+                            onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
+                        )
+                    }
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Color(.systemGroupedBackground))
+            .listStyle(.insetGrouped)
             .navigationTitle("Search")
             .searchable(text: $query, prompt: "App name or bundle ID")
             .onSubmit(of: .search) { Task { await runSearch() } }

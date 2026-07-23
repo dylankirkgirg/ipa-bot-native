@@ -31,6 +31,7 @@ struct StatusView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Status")
             .task { await load() }
             .refreshable { await load() }

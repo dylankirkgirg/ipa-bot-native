@@ -7,43 +7,39 @@ struct HitRow: View {
     var onInject: (() -> Void)? = nil
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
+        HStack(spacing: 12) {
             AsyncImage(url: hit.icon_url.flatMap(URL.init)) { phase in
                 switch phase {
                 case .success(let image):
                     image.resizable().aspectRatio(contentMode: .fill)
                 default:
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(LinearGradient(colors: [.accentColor.opacity(0.4), .accentColor.opacity(0.15)],
-                                              startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .overlay(Text(hit.emoji.isEmpty ? "📦" : hit.emoji).font(.title2))
+                    RoundedRectangle(cornerRadius: 9)
+                        .fill(Color(.tertiarySystemFill))
+                        .overlay(Text(hit.emoji.isEmpty ? "📦" : hit.emoji).font(.subheadline))
                 }
             }
-            .frame(width: 56, height: 56)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color(.separator).opacity(0.4), lineWidth: 0.5))
+            .frame(width: 36, height: 36)
+            .clipShape(RoundedRectangle(cornerRadius: 9))
 
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 5) {
-                    Text(hit.app_name)
-                        .font(.system(.subheadline, weight: .semibold))
-                        .lineLimit(1)
-                    if hit.is_modded == true {
-                        Image(systemName: "wrench.and.screwdriver.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.orange)
-                    }
-                }
-                HStack(spacing: 6) {
-                    pill("v\(hit.version)")
-                    pill(hit.source)
-                    if hit.size_mb > 0 { pill("\(Int(hit.size_mb)) MB") }
-                }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(hit.app_name)
+                    .font(.system(.body))
+                    .lineLimit(1)
+                Text(metaLine)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 8)
 
-            HStack(spacing: 18) {
+            if hit.is_modded == true {
+                Image(systemName: "wrench.and.screwdriver.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.orange)
+            }
+
+            HStack(spacing: 16) {
                 if let onStar {
                     Button(action: onStar) {
                         Image(systemName: (hit.starred ?? false) ? "star.fill" : "star")
@@ -66,19 +62,14 @@ struct HitRow: View {
                     .buttonStyle(.plain)
                 }
             }
-            .font(.system(size: 17))
+            .font(.system(size: 16))
         }
-        .padding(10)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .padding(.vertical, 6)
     }
 
-    @ViewBuilder
-    private func pill(_ text: String) -> some View {
-        Text(text)
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(.secondary.opacity(0.12), in: Capsule())
+    private var metaLine: String {
+        var parts = ["v\(hit.version)", hit.source]
+        if hit.size_mb > 0 { parts.append("\(Int(hit.size_mb)) MB") }
+        return parts.joined(separator: " · ")
     }
 }
