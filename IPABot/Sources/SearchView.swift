@@ -10,6 +10,7 @@ struct SearchView: View {
     @State private var downloadTarget: DownloadTarget?
     @State private var injectTarget: Hit?
     @State private var showDecrypt = false
+    @State private var showDiff = false
     @State private var shareTarget: ShareTarget?
     @State private var isDownloadingVault = false
     @State private var signingBundleId: String?
@@ -58,6 +59,16 @@ struct SearchView: View {
                         Image(systemName: "lock.open")
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { showDiff = true } label: {
+                        Image(systemName: "arrow.left.arrow.right")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { Task { await runRandom() } } label: {
+                        Image(systemName: "dice")
+                    }
+                }
             }
             .searchable(text: $query, prompt: "App name or bundle ID")
             .searchSuggestions {
@@ -85,6 +96,9 @@ struct SearchView: View {
             }
             .sheet(isPresented: $showDecrypt) {
                 DecryptView()
+            }
+            .sheet(isPresented: $showDiff) {
+                DiffView()
             }
             .sheet(item: $shareTarget) { target in
                 ShareSheet(items: [target.url])
@@ -142,6 +156,19 @@ struct SearchView: View {
 
     private func loadHistory() async {
         history = (try? await api.searchHistory().history) ?? []
+    }
+
+    private func runRandom() async {
+        isLoading = true; errorMessage = nil; suggestions = []
+        do {
+            let resp = try await api.random()
+            hits = resp.hits
+            query = ""
+            if let err = resp.error { errorMessage = err }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
     }
 
     private func loadRecent() async {

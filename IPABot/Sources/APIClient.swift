@@ -222,6 +222,26 @@ final class APIClient: ObservableObject {
         try await post("/api/resignall", body: [:])
     }
 
+    func setAutosign(_ on: Bool) async throws -> ActionResult {
+        try await post("/api/autosign", body: ["on": on])
+    }
+
+    func diff(query: String) async throws -> DiffResponse {
+        try await get("/api/diff", query: ["q": query])
+    }
+
+    func changelog(query: String) async throws -> ChangelogResponse {
+        try await get("/api/changelog", query: ["q": query])
+    }
+
+    func random(moddedOnly: Bool = false) async throws -> SearchResponse {
+        try await get("/api/random", query: moddedOnly ? ["mod": "1"] : [:])
+    }
+
+    func discover(bundle: String) async throws -> DiscoverResponse {
+        try await get("/api/discover", query: ["bundle": bundle])
+    }
+
     func backupNow() async throws -> SignResult {
         try await post("/api/backup-now", body: [:])
     }

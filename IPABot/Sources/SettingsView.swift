@@ -15,6 +15,8 @@ struct SettingsView: View {
     @State private var advancedNote: String?
     @State private var exportTarget: ShareTarget?
     @State private var restartingService: String?
+    @State private var autosignOn = false
+    @State private var isTogglingAutosign = false
 
     private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
 
@@ -94,6 +96,14 @@ struct SettingsView: View {
                         Button("Save") { Task { await savePassword() } }
                             .disabled(isBusy || certPassword.isEmpty)
                     }
+
+                    Toggle(isOn: Binding(
+                        get: { autosignOn },
+                        set: { newValue in Task { await toggleAutosign(newValue) } }
+                    )) {
+                        Label("Auto-sign starred updates", systemImage: "wand.and.stars")
+                    }
+                    .disabled(isTogglingAutosign || cert == nil)
 
                     if let statusNote {
                         Label(statusNote, systemImage: isBusy ? "hourglass" : "checkmark.circle.fill")
@@ -181,6 +191,22 @@ struct SettingsView: View {
         } catch {
             // no cert configured yet — not an error worth surfacing on load
         }
+        autosignOn = (try? await api.status())?.autosign ?? false
+    }
+
+    private func toggleAutosign(_ on: Bool) async {
+        isTogglingAutosign = true
+        do {
+            let result = try await api.setAutosign(on)
+            if result.ok {
+                autosignOn = on
+            } else {
+                advancedNote = result.error ?? "Couldn't update auto-sign."
+            }
+        } catch {
+            advancedNote = error.localizedDescription
+        }
+        isTogglingAutosign = false
     }
 
     private func upload(url: URL, part: CertPart) async {

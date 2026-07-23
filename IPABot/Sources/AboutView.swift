@@ -8,6 +8,7 @@ struct AboutView: View {
     @State private var info: AboutInfo?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showChangelog = false
 
     var body: some View {
         List {
@@ -55,6 +56,18 @@ struct AboutView: View {
                     if info.vault_count > 0 {
                         LabeledContent("TG vault", value: "\(info.vault_count) entr\(info.vault_count == 1 ? "y" : "ies")")
                     }
+                    Button {
+                        showChangelog = true
+                    } label: {
+                        Label("Changelog", systemImage: "text.alignleft")
+                    }
+                    if info.discoverable {
+                        NavigationLink {
+                            DiscoverView(bundleId: info.bundle_id, seedName: info.app_name)
+                        } label: {
+                            Label("More by this dev", systemImage: "compass.drawing")
+                        }
+                    }
                 }
 
                 Section("Your library") {
@@ -80,6 +93,9 @@ struct AboutView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .overlay { if isLoading { ProgressView() } }
+        .sheet(isPresented: $showChangelog) {
+            ChangelogView(query: info?.app_name ?? fallbackName)
+        }
     }
 
     private func formattedCount(_ n: Int?) -> String {
