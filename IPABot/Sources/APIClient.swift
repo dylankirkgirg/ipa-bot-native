@@ -226,4 +226,30 @@ final class APIClient: ObservableObject {
         if let password { body["password"] = password }
         return try await post("/api/cert-upload", body: body)
     }
+
+    // Streams the raw .ipa bytes back — used for TG-vault hits, which carry no
+    // public download_url and must be resolved server-side via vault_msg_id.
+    func downloadFile(url: String? = nil, vaultMsgId: Int? = nil, name: String) async throws -> URL {
+        guard isConfigured, let endpoint = URL(string: baseURL + "/api/download") else { throw APIError.notConfigured }
+        var req = URLRequest(url: endpoint)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "content-type")
+        var payload: [String: Any] = ["k": secret, "name": name]
+        if let url { payload["url"] = url }
+        if let vaultMsgId { payload["vault_msg_id"] = vaultMsgId }
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.http((resp as? HTTPURLResponse)?.statusCode ?? -1)
+        }
+        if let contentType = http.value(forHTTPHeaderField: "content-type"), contentType.contains("json") {
+            struct Err: Codable { var ok: Bool; var error: String? }
+            let e = try? JSONDecoder().decode(Err.self, from: data)
+            throw NSError(domain: "IPABot", code: -1, userInfo: [NSLocalizedDescriptionKey: e?.error ?? "Download failed."])
+        }
+        let safeName = name.isEmpty ? "app.ipa" : name
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(safeName)
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL
+    }
 }

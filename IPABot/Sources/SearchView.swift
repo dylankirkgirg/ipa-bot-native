@@ -10,6 +10,8 @@ struct SearchView: View {
     @State private var downloadTarget: DownloadTarget?
     @State private var injectTarget: Hit?
     @State private var showDecrypt = false
+    @State private var shareTarget: ShareTarget?
+    @State private var isDownloadingVault = false
 
     var body: some View {
         NavigationStack {
@@ -29,7 +31,7 @@ struct SearchView: View {
                         HitRow(
                             hit: hit,
                             onStar: { Task { await toggleStar(hit) } },
-                            onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) },
+                            onDownload: downloadAction(for: hit),
                             onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
                         )
                     }
@@ -66,7 +68,32 @@ struct SearchView: View {
             .sheet(isPresented: $showDecrypt) {
                 DecryptView()
             }
+            .sheet(item: $shareTarget) { target in
+                ShareSheet(items: [target.url])
+            }
         }
+    }
+
+    private func downloadAction(for hit: Hit) -> (() -> Void)? {
+        if !hit.download_url.isEmpty {
+            return { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) }
+        }
+        if let vaultId = hit.vault_msg_id {
+            return { Task { await downloadVault(vaultId: vaultId, name: hit.file_name ?? hit.app_name) } }
+        }
+        return nil
+    }
+
+    private func downloadVault(vaultId: Int, name: String) async {
+        guard !isDownloadingVault else { return }
+        isDownloadingVault = true; errorMessage = nil
+        do {
+            let fileURL = try await api.downloadFile(vaultMsgId: vaultId, name: name)
+            shareTarget = ShareTarget(url: fileURL)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isDownloadingVault = false
     }
 
     private func loadRecent() async {
@@ -108,6 +135,11 @@ struct SearchView: View {
 }
 
 struct DownloadTarget: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+struct ShareTarget: Identifiable {
     let url: URL
     var id: String { url.absoluteString }
 }
