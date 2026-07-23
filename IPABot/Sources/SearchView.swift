@@ -14,6 +14,7 @@ struct SearchView: View {
     @State private var isDownloadingVault = false
     @State private var signingBundleId: String?
     @State private var signAlert: SignAlert?
+    @State private var history: [String] = []
 
     struct SignAlert: Identifiable {
         let id = UUID()
@@ -55,6 +56,11 @@ struct SearchView: View {
                 }
             }
             .searchable(text: $query, prompt: "App name or bundle ID")
+            .searchSuggestions {
+                ForEach(history, id: \.self) { term in
+                    Label(term, systemImage: "clock").searchCompletion(term)
+                }
+            }
             .onSubmit(of: .search) { Task { await runSearch() } }
             .overlay {
                 if isLoading { ProgressView() }
@@ -65,7 +71,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .task { await loadRecent() }
+            .task { await loadRecent(); await loadHistory() }
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
             .sheet(item: $downloadTarget) { target in
                 SafariView(url: target.url)
@@ -119,6 +125,10 @@ struct SearchView: View {
         isDownloadingVault = false
     }
 
+    private func loadHistory() async {
+        history = (try? await api.searchHistory().history) ?? []
+    }
+
     private func loadRecent() async {
         isLoading = true; errorMessage = nil
         do {
@@ -142,6 +152,7 @@ struct SearchView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+        await loadHistory()
     }
 
     private func toggleStar(_ hit: Hit) async {

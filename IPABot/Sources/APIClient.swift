@@ -206,6 +206,32 @@ final class APIClient: ObservableObject {
         try await post("/api/preset-save", body: ["name": name, "tweak_ids": tweakIds])
     }
 
+    func searchHistory() async throws -> SearchHistoryResponse {
+        try await get("/api/search-history")
+    }
+
+    func backupNow() async throws -> SignResult {
+        try await post("/api/backup-now", body: [:])
+    }
+
+    func restartService(_ service: String) async throws -> ActionResult {
+        try await post("/api/restart", body: ["service": service])
+    }
+
+    func exportDump() async throws -> URL {
+        guard isConfigured, let url = URL(string: baseURL + "/api/export") else { throw APIError.notConfigured }
+        var req = URLRequest(url: url)
+        req.setValue(secret, forHTTPHeaderField: "X-Inject-Secret")
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.http((resp as? HTTPURLResponse)?.statusCode ?? -1)
+        }
+        let stamp = ISO8601DateFormatter().string(from: Date()).prefix(10)
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("ipabot-export-\(stamp).json")
+        try data.write(to: fileURL, options: .atomic)
+        return fileURL
+    }
+
     // Files upload straight to the Oracle VM's control daemon, same endpoint the
     // web app uses — the Worker caps request bodies at 100MB, this bypasses it.
     private static let uploadEndpoint = URL(string: "https://129-80-130-200.sslip.io/control/upload")!
