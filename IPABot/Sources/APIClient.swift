@@ -282,6 +282,10 @@ final class APIClient: ObservableObject {
         try await get("/api/trending")
     }
 
+    func channel(_ q: String) async throws -> ChannelResponse {
+        try await get("/api/channel", query: q.isEmpty ? [:] : ["q": q])
+    }
+
     func sniper() async throws -> SniperResponse {
         try await get("/api/sniper")
     }

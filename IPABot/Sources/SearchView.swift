@@ -12,6 +12,7 @@ struct SearchView: View {
     @State private var showDecrypt = false
     @State private var showDiff = false
     @State private var showTrending = false
+    @State private var showChannels = false
     @State private var shareTarget: ShareTarget?
     @State private var isDownloadingVault = false
     @State private var signingBundleId: String?
@@ -99,6 +100,7 @@ struct SearchView: View {
             .sheet(isPresented: $showTrending) {
                 TrendingView { term in query = term; Task { await runSearch() } }
             }
+            .sheet(isPresented: $showChannels) { ChannelBrowseView() }
             .sheet(item: $shareTarget) { target in ShareSheet(items: [target.url]) }
             .sheet(item: $textJob) { target in TextJobResultView(title: target.title, jobId: target.id) }
             .alert(item: $signAlert) { alert in
@@ -118,6 +120,7 @@ struct SearchView: View {
                 Button("Decrypt") { showDecrypt = true }
                 Button("Diff") { showDiff = true }
                 Button("Trending") { showTrending = true }
+                Button("Channels") { showChannels = true }
                 Button("Random") { Task { await runRandom() } }
             } label: {
                 Glyph(.plus, size: 18, color: Ledger.textSecondary)

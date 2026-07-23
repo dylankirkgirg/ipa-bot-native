@@ -26,6 +26,11 @@ struct SearchResponse: Codable {
     var error: String?
 }
 
+struct ChannelResponse: Codable {
+    var hits: [Hit]
+    var available: [String]?
+}
+
 struct StarEntry: Codable, Identifiable {
     var app_name: String
     var bundle_id: String
