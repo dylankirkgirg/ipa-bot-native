@@ -10,6 +10,8 @@ struct DiscoverView: View {
     @State private var errorMessage: String?
     @State private var downloadTarget: DownloadTarget?
     @State private var injectTarget: Hit?
+    @State private var shareTarget: ShareTarget?
+    @State private var isDownloadingVault = false
 
     var body: some View {
         List {
@@ -25,8 +27,8 @@ struct DiscoverView: View {
                     if let hit = app.hit {
                         HitRow(
                             hit: hit,
-                            onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) },
-                            onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
+                            onDownload: downloadAction(for: hit),
+                            onInject: canDeliver(hit) ? { injectTarget = hit } : nil
                         )
                     } else {
                         VStack(alignment: .leading, spacing: 2) {
@@ -49,6 +51,31 @@ struct DiscoverView: View {
         .sheet(item: $injectTarget) { hit in
             InjectView(hit: hit)
         }
+        .sheet(item: $shareTarget) { target in ShareSheet(items: [target.url]) }
+    }
+
+    private func canDeliver(_ hit: Hit) -> Bool {
+        !hit.download_url.isEmpty || hit.vault_msg_id != nil
+    }
+
+    private func downloadAction(for hit: Hit) -> (() -> Void)? {
+        if !hit.download_url.isEmpty {
+            return { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) }
+        }
+        if let vaultId = hit.vault_msg_id {
+            return { Task { await downloadVault(vaultId: vaultId, name: hit.file_name ?? hit.app_name) } }
+        }
+        return nil
+    }
+
+    private func downloadVault(vaultId: Int, name: String) async {
+        guard !isDownloadingVault else { return }
+        isDownloadingVault = true; errorMessage = nil
+        do {
+            let fileURL = try await api.downloadFile(vaultMsgId: vaultId, name: name)
+            shareTarget = ShareTarget(url: fileURL)
+        } catch { errorMessage = error.localizedDescription }
+        isDownloadingVault = false
     }
 
     private func load() async {
