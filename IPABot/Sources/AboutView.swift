@@ -45,7 +45,13 @@ struct AboutView: View {
                     if let v = info.latest_version {
                         LabeledContent("Latest version", value: "v\(v)" + (info.latest_date.map { " · \($0)" } ?? ""))
                     }
-                    LabeledContent("Sources", value: "\(info.source_count) feed\(info.source_count == 1 ? "" : "s")")
+                    if let names = info.source_names, !names.isEmpty {
+                        ForEach(names, id: \.self) { name in
+                            Label(name, systemImage: "tray.2.fill")
+                        }
+                    } else {
+                        LabeledContent("Sources", value: "\(info.source_count) feed\(info.source_count == 1 ? "" : "s")")
+                    }
                     if info.vault_count > 0 {
                         LabeledContent("TG vault", value: "\(info.vault_count) entr\(info.vault_count == 1 ? "y" : "ies")")
                     }
