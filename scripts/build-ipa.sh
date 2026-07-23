@@ -16,11 +16,15 @@ cp -R build/IPABot.xcarchive/Products/Applications/IPABot.app build/Payload/
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" build/Payload/IPABot.app/Info.plist)
 BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" build/Payload/IPABot.app/Info.plist)
-NAME="IPABot-$VERSION-$BUILD.ipa"
+STAMP=$(date +%Y%m%d-%H%M%S)
+NAME="IPABot-$VERSION-$BUILD-$STAMP.ipa"
 
+mkdir -p ~/Desktop/IPABot-Builds
 cp build/IPABot.ipa "dist/$NAME"
 cp build/IPABot.ipa ~/Desktop/IPABot.ipa
+cp build/IPABot.ipa "$HOME/Desktop/IPABot-Builds/$NAME"
 
 echo "Built $NAME"
 echo "  repo:    dist/$NAME"
-echo "  iCloud:  ~/Desktop/IPABot.ipa"
+echo "  iCloud:  ~/Desktop/IPABot.ipa (latest)"
+echo "  iCloud:  ~/Desktop/IPABot-Builds/$NAME (archive, never overwritten)"
