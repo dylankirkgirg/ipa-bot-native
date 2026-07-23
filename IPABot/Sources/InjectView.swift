@@ -15,6 +15,8 @@ struct InjectView: View {
     @State private var statusNote: String?
     @State private var installTarget: DownloadTarget?
     @State private var pollTask: Task<Void, Never>?
+    @State private var customUrl = ""
+    @State private var showAddTweak = false
 
     var body: some View {
         NavigationStack {
@@ -44,7 +46,7 @@ struct InjectView: View {
                         }
                     }
                 }
-                Section("Tweaks") {
+                Section {
                     if isLoadingTweaks {
                         ProgressView()
                     } else if tweaks.isEmpty {
@@ -68,6 +70,27 @@ struct InjectView: View {
                             }
                         }
                     }
+                } header: {
+                    HStack {
+                        Text("Tweaks")
+                        Spacer()
+                        Button { showAddTweak = true } label: {
+                            Image(systemName: "plus.circle")
+                        }
+                    }
+                }
+
+                Section {
+                    TextField(".deb / .dylib URL", text: $customUrl)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Button("Inject Custom URL") { Task { await injectCustomUrl() } }
+                        .disabled(isBusy || customUrl.trimmingCharacters(in: .whitespaces).isEmpty)
+                } header: {
+                    Label("Custom Tweak", systemImage: "link")
+                } footer: {
+                    Text("One-off inject, not saved to your tweak catalog.")
                 }
             }
             .navigationTitle(hit.app_name)
@@ -87,6 +110,9 @@ struct InjectView: View {
             }
             .sheet(item: $installTarget) { target in
                 SafariView(url: target.url)
+            }
+            .sheet(isPresented: $showAddTweak) {
+                AddTweakSheet(onSaved: { Task { await loadTweaks() } })
             }
         }
     }
@@ -121,6 +147,24 @@ struct InjectView: View {
         isBusy = true; errorMessage = nil; statusNote = nil
         do {
             let result = try await api.inject(hit: hit, tweakIds: Array(selected))
+            guard result.ok, let id = result.web_id ?? result.id else {
+                errorMessage = result.error ?? "Inject request failed."
+                isBusy = false
+                return
+            }
+            statusNote = "Injecting — this can take a few minutes…"
+            pollTask?.cancel()
+            pollTask = Task { await pollInject(id: id) }
+        } catch {
+            errorMessage = error.localizedDescription
+            isBusy = false
+        }
+    }
+
+    private func injectCustomUrl() async {
+        isBusy = true; errorMessage = nil; statusNote = nil
+        do {
+            let result = try await api.injectCustom(hit: hit, customUrl: customUrl.trimmingCharacters(in: .whitespaces))
             guard result.ok, let id = result.web_id ?? result.id else {
                 errorMessage = result.error ?? "Inject request failed."
                 isBusy = false

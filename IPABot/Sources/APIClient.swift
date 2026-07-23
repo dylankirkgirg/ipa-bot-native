@@ -160,6 +160,20 @@ final class APIClient: ObservableObject {
         return try await post("/api/inject", body: ["hit": hitDict, "tweak_ids": tweakIds])
     }
 
+    func injectCustom(hit: Hit, customUrl: String) async throws -> InjectResult {
+        let hitData = try JSONEncoder().encode(hit)
+        let hitDict = try JSONSerialization.jsonObject(with: hitData) as? [String: Any] ?? [:]
+        return try await post("/api/inject", body: ["hit": hitDict, "custom_url": customUrl])
+    }
+
+    func addTweak(id: String, bundle: String, name: String, repo: String, emoji: String) async throws -> ActionResult {
+        try await post("/api/tweak-add", body: ["id": id, "bundle": bundle, "name": name, "repo": repo, "emoji": emoji])
+    }
+
+    func removeTweak(id: String) async throws -> ActionResult {
+        try await post("/api/tweak-remove", body: ["id": id])
+    }
+
     func injectResult(id: String) async throws -> JobPollResult {
         try await get("/api/inject-result", query: ["id": id])
     }
