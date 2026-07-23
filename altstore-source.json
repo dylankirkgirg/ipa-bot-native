@@ -1,0 +1,27 @@
+{
+  "name": "IPABot Native",
+  "identifier": "com.dylankirkgirg.ipabot-native.source",
+  "apps": [
+    {
+      "name": "IPABot",
+      "bundleIdentifier": "com.dylankirkgirg.ipabot.native",
+      "developerName": "dylankirkgirg",
+      "version": "1.0",
+      "versionDate": "2026-07-23T03:19:39Z",
+      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.0/IPABot.ipa",
+      "localizedDescription": "Native SwiftUI client for ipa-bot.",
+      "iconURL": "",
+      "size": 134178,
+      "minOSVersion": "16.0",
+      "versions": [
+        {
+          "version": "1.0",
+          "date": "2026-07-23T03:19:39Z",
+          "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.0/IPABot.ipa",
+          "size": 134178,
+          "minOSVersion": "16.0"
+        }
+      ]
+    }
+  ]
+}
