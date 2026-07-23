@@ -9,6 +9,7 @@ struct SearchView: View {
     @State private var errorMessage: String?
     @State private var downloadTarget: DownloadTarget?
     @State private var injectTarget: Hit?
+    @State private var showDecrypt = false
 
     var body: some View {
         NavigationStack {
@@ -36,6 +37,13 @@ struct SearchView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Search")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { showDecrypt = true } label: {
+                        Image(systemName: "lock.open")
+                    }
+                }
+            }
             .searchable(text: $query, prompt: "App name or bundle ID")
             .onSubmit(of: .search) { Task { await runSearch() } }
             .overlay {
@@ -54,6 +62,9 @@ struct SearchView: View {
             }
             .sheet(item: $injectTarget) { hit in
                 InjectView(hit: hit)
+            }
+            .sheet(isPresented: $showDecrypt) {
+                DecryptView()
             }
         }
     }
