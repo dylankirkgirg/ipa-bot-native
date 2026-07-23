@@ -12,6 +12,13 @@ struct SearchView: View {
     @State private var showDecrypt = false
     @State private var shareTarget: ShareTarget?
     @State private var isDownloadingVault = false
+    @State private var signingBundleId: String?
+    @State private var signAlert: SignAlert?
+
+    struct SignAlert: Identifiable {
+        let id = UUID()
+        let message: String
+    }
 
     var body: some View {
         NavigationStack {
@@ -32,6 +39,7 @@ struct SearchView: View {
                             hit: hit,
                             onStar: { Task { await toggleStar(hit) } },
                             onDownload: downloadAction(for: hit),
+                            onSign: hit.download_url.isEmpty ? nil : { Task { await signDirect(hit) } },
                             onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
                         )
                     }
@@ -71,7 +79,22 @@ struct SearchView: View {
             .sheet(item: $shareTarget) { target in
                 ShareSheet(items: [target.url])
             }
+            .alert(item: $signAlert) { alert in
+                Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            }
         }
+    }
+
+    private func signDirect(_ hit: Hit) async {
+        guard signingBundleId == nil else { return }
+        signingBundleId = hit.bundle_id
+        do {
+            let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions())
+            signAlert = SignAlert(message: result.ok ? (result.note ?? "Signing queued — check the Signed tab shortly.") : (result.error ?? "Sign request failed."))
+        } catch {
+            signAlert = SignAlert(message: error.localizedDescription)
+        }
+        signingBundleId = nil
     }
 
     private func downloadAction(for hit: Hit) -> (() -> Void)? {

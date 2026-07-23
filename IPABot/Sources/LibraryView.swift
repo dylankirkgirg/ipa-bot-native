@@ -16,7 +16,7 @@ struct LibraryView: View {
     @State private var activeSheet: AddSheetKind?
 
     enum AddSheetKind: Identifiable {
-        case note, pin, alias, tfwatch, source
+        case note, pin, alias, tfwatch, source, preset
         var id: Int { hashValue }
     }
 
@@ -148,6 +148,7 @@ struct LibraryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
+                        Button("Preset", systemImage: "square.stack.3d.up.fill") { activeSheet = .preset }
                         Button("Note", systemImage: "note.text") { activeSheet = .note }
                         Button("Pin", systemImage: "pin.fill") { activeSheet = .pin }
                         Button("Alias", systemImage: "at") { activeSheet = .alias }
@@ -168,6 +169,7 @@ struct LibraryView: View {
                 case .alias: AddAliasSheet(onSaved: { Task { await load() } })
                 case .tfwatch: AddTfWatchSheet(onSaved: { Task { await load() } })
                 case .source: AddSourceSheet(onSaved: { Task { await load() } })
+                case .preset: AddPresetSheet(onSaved: { Task { await load() } })
                 }
             }
         }

@@ -202,6 +202,10 @@ final class APIClient: ObservableObject {
         try await post("/api/source-add", body: ["name": name, "url": url, "emoji": emoji])
     }
 
+    func savePreset(name: String, tweakIds: [String]) async throws -> ActionResult {
+        try await post("/api/preset-save", body: ["name": name, "tweak_ids": tweakIds])
+    }
+
     // Files upload straight to the Oracle VM's control daemon, same endpoint the
     // web app uses — the Worker caps request bodies at 100MB, this bypasses it.
     private static let uploadEndpoint = URL(string: "https://129-80-130-200.sslip.io/control/upload")!
