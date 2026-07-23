@@ -27,6 +27,7 @@ struct SignedView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Signed")
             .task { await load() }
             .refreshable { await load() }

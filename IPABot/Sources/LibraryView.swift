@@ -137,6 +137,7 @@ struct LibraryView: View {
                     } header: { header("TestFlight Watches", count: tfWatches.count, icon: "airplane") }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Library")
             .task { await load() }
             .refreshable { await load() }
