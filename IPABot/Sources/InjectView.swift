@@ -1,4 +1,5 @@
 import SwiftUI
+import ActivityKit
 
 struct InjectView: View {
     @EnvironmentObject var api: APIClient
@@ -17,6 +18,9 @@ struct InjectView: View {
     @State private var pollTask: Task<Void, Never>?
     @State private var customUrl = ""
     @State private var showAddTweak = false
+    // Type-erased since Activity<T> requires iOS 16.2 availability, which a
+    // stored property's type can't carry on a struct with no such guard.
+    @State private var activityBox: Any?
 
     var body: some View {
         NavigationStack {
@@ -180,6 +184,9 @@ struct InjectView: View {
     }
 
     private func pollInject(id: String) async {
+        if #available(iOS 16.2, *) {
+            activityBox = LiveActivityManager.start(jobId: id, appName: hit.app_name, kind: "inject")
+        }
         for _ in 0..<90 {
             if Task.isCancelled { return }
             do {
@@ -188,11 +195,13 @@ struct InjectView: View {
                     statusNote = "Done — \(poll.name ?? "tweaked.ipa")"
                     installTarget = URL(string: url).map(DownloadTarget.init)
                     isBusy = false
+                    endActivity(status: "done", detail: poll.name ?? "Done")
                     return
                 }
                 if let err = poll.error {
                     errorMessage = err
                     isBusy = false
+                    endActivity(status: "failed", detail: err)
                     return
                 }
             } catch {
@@ -202,5 +211,13 @@ struct InjectView: View {
         }
         errorMessage = "Timed out waiting for the inject job."
         isBusy = false
+        endActivity(status: "failed", detail: "Timed out")
+    }
+
+    private func endActivity(status: String, detail: String) {
+        if #available(iOS 16.2, *) {
+            LiveActivityManager.end(activityBox as? Activity<InjectActivityAttributes>, status: status, detail: detail)
+        }
+        activityBox = nil
     }
 }

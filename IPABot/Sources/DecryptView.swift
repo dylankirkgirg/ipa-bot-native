@@ -1,4 +1,5 @@
 import SwiftUI
+import ActivityKit
 
 struct DecryptView: View {
     @EnvironmentObject var api: APIClient
@@ -10,6 +11,7 @@ struct DecryptView: View {
     @State private var errorMessage: String?
     @State private var installTarget: DownloadTarget?
     @State private var pollTask: Task<Void, Never>?
+    @State private var activityBox: Any?
 
     var body: some View {
         NavigationStack {
@@ -73,6 +75,9 @@ struct DecryptView: View {
     }
 
     private func poll(id: String) async {
+        if #available(iOS 16.2, *) {
+            activityBox = LiveActivityManager.start(jobId: id, appName: urlText, kind: "decrypt")
+        }
         for _ in 0..<90 {
             if Task.isCancelled { return }
             do {
@@ -81,11 +86,13 @@ struct DecryptView: View {
                     statusNote = "Done — \(result.name ?? "decrypted.ipa")"
                     installTarget = URL(string: url).map(DownloadTarget.init)
                     isBusy = false
+                    endActivity(status: "done", detail: result.name ?? "Done")
                     return
                 }
                 if let err = result.error {
                     errorMessage = err
                     isBusy = false
+                    endActivity(status: "failed", detail: err)
                     return
                 }
             } catch {
@@ -95,5 +102,13 @@ struct DecryptView: View {
         }
         errorMessage = "Timed out waiting for the decrypt job."
         isBusy = false
+        endActivity(status: "failed", detail: "Timed out")
+    }
+
+    private func endActivity(status: String, detail: String) {
+        if #available(iOS 16.2, *) {
+            LiveActivityManager.end(activityBox as? Activity<InjectActivityAttributes>, status: status, detail: detail)
+        }
+        activityBox = nil
     }
 }
