@@ -39,6 +39,7 @@ struct TextJobResultView: View {
 
     private func poll() async {
         for _ in 0..<40 {
+            if Task.isCancelled { return }
             do {
                 let r = try await api.textJobResult(id: jobId)
                 if r.pending == true { try? await Task.sleep(nanoseconds: 3_000_000_000); continue }

@@ -65,7 +65,8 @@ final class APIClient: ObservableObject {
     private func get<T: Decodable>(_ path: String, query: [String: String] = [:]) async throws -> T {
         guard isConfigured, var comps = URLComponents(string: baseURL + path) else { throw APIError.notConfigured }
         comps.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
-        var req = URLRequest(url: comps.url!)
+        guard let url = comps.url else { throw APIError.notConfigured }
+        var req = URLRequest(url: url)
         req.setValue(secret, forHTTPHeaderField: "X-Inject-Secret")
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
