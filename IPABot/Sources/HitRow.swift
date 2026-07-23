@@ -4,6 +4,7 @@ struct HitRow: View {
     let hit: Hit
     var onStar: (() -> Void)? = nil
     var onDownload: (() -> Void)? = nil
+    var onInject: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -42,6 +43,12 @@ struct HitRow: View {
             if let onDownload {
                 Button(action: onDownload) {
                     Image(systemName: "arrow.down.circle")
+                }
+                .buttonStyle(.plain)
+            }
+            if let onInject {
+                Button(action: onInject) {
+                    Image(systemName: "wrench.and.screwdriver")
                 }
                 .buttonStyle(.plain)
             }
