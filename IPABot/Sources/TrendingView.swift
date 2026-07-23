@@ -13,7 +13,7 @@ struct TrendingView: View {
         NavigationStack {
             List {
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
                 }
                 if trending.isEmpty && !isLoading && errorMessage == nil {
                     Text("Not enough search history yet.").foregroundStyle(.secondary)
@@ -24,7 +24,7 @@ struct TrendingView: View {
                         dismiss()
                     } label: {
                         HStack {
-                            Label(entry.original, systemImage: "flame")
+                            Text(entry.original).foregroundColor(Ledger.text)
                             Spacer()
                             if entry.count > 1 {
                                 Text("×\(entry.count)").foregroundStyle(.secondary)
@@ -33,6 +33,7 @@ struct TrendingView: View {
                     }
                 }
             }
+            .ledgerBackground()
             .navigationTitle("Trending")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

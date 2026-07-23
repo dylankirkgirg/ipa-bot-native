@@ -14,7 +14,7 @@ struct DiscoverView: View {
     var body: some View {
         List {
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                Text(errorMessage).foregroundStyle(Ledger.accent)
             }
             if let result {
                 if result.apps.isEmpty {
@@ -38,6 +38,7 @@ struct DiscoverView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .ledgerBackground()
         .navigationTitle(result?.artist_name ?? "More by this dev")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

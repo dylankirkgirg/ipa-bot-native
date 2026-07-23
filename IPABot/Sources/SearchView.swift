@@ -26,14 +26,18 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             List {
+                header
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
+                        .listRowSeparator(.hidden).listRowBackground(Color.clear)
                 }
                 if !suggestions.isEmpty {
-                    Section("Did you mean?") {
-                        ForEach(suggestions, id: \.self) { s in
-                            Button(s) { query = s; Task { await runSearch() } }
-                        }
+                    LedgerSectionLabel(text: "Did you mean?")
+                        .listRowSeparator(.hidden).listRowBackground(Color.clear).listRowInsets(EdgeInsets())
+                    ForEach(suggestions, id: \.self) { s in
+                        Button(s) { query = s; Task { await runSearch() } }
+                            .font(Ledger.body(14))
+                            .listRowSeparator(.hidden).listRowBackground(Color.clear)
                     }
                 }
                 ForEach(hits) { hit in
@@ -49,69 +53,64 @@ struct SearchView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                    .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                 }
             }
             .listStyle(.plain)
-            .webBackground()
-            .navigationTitle("Search")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button("Decrypt", systemImage: "lock.open") { showDecrypt = true }
-                        Button("Diff", systemImage: "arrow.left.arrow.right") { showDiff = true }
-                        Button("Trending", systemImage: "flame") { showTrending = true }
-                        Button("Random", systemImage: "dice") { Task { await runRandom() } }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
+            .ledgerBackground()
+            .navigationBarHidden(true)
             .searchable(text: $query, prompt: "App name or bundle ID")
             .searchSuggestions {
                 ForEach(history, id: \.self) { term in
-                    Label(term, systemImage: "clock").searchCompletion(term)
+                    Text(term).searchCompletion(term)
                 }
             }
             .onSubmit(of: .search) { Task { await runSearch() } }
             .overlay {
                 if isLoading { ProgressView() }
                 else if hits.isEmpty && query.isEmpty && errorMessage == nil {
-                    VStack(spacing: 8) {
-                        Image(systemName: "clock").font(.largeTitle).foregroundStyle(.secondary)
-                        Text("Recent finds will appear here").foregroundStyle(.secondary)
-                    }
+                    Text("Recent finds will appear here")
+                        .font(Ledger.body(14)).foregroundColor(Ledger.textTertiary)
                 }
             }
             .task { await loadRecent(); await loadHistory() }
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
-            .sheet(item: $downloadTarget) { target in
-                SafariView(url: target.url)
-            }
-            .sheet(item: $injectTarget) { hit in
-                InjectView(hit: hit)
-            }
-            .sheet(isPresented: $showDecrypt) {
-                DecryptView()
-            }
-            .sheet(isPresented: $showDiff) {
-                DiffView()
-            }
+            .sheet(item: $downloadTarget) { target in SafariView(url: target.url) }
+            .sheet(item: $injectTarget) { hit in InjectView(hit: hit) }
+            .sheet(isPresented: $showDecrypt) { DecryptView() }
+            .sheet(isPresented: $showDiff) { DiffView() }
             .sheet(isPresented: $showTrending) {
-                TrendingView { term in
-                    query = term
-                    Task { await runSearch() }
-                }
+                TrendingView { term in query = term; Task { await runSearch() } }
             }
-            .sheet(item: $shareTarget) { target in
-                ShareSheet(items: [target.url])
-            }
+            .sheet(item: $shareTarget) { target in ShareSheet(items: [target.url]) }
             .alert(item: $signAlert) { alert in
                 Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
             }
         }
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Search").font(Ledger.heading(28))
+            Spacer()
+            Button { Task { if query.isEmpty { await loadRecent() } else { await runSearch() } } } label: {
+                Glyph(.refresh, size: 18, color: Ledger.textSecondary)
+            }
+            Menu {
+                Button("Decrypt") { showDecrypt = true }
+                Button("Diff") { showDiff = true }
+                Button("Trending") { showTrending = true }
+                Button("Random") { Task { await runRandom() } }
+            } label: {
+                Glyph(.plus, size: 18, color: Ledger.textSecondary)
+            }
+        }
+        .padding(.top, 8).padding(.bottom, 6)
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 
     @ViewBuilder
@@ -130,7 +129,7 @@ struct SearchView: View {
         signingBundleId = hit.bundle_id
         do {
             let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions())
-            signAlert = SignAlert(message: result.ok ? (result.note ?? "Signing queued — check the Signed tab shortly.") : (result.error ?? "Sign request failed."))
+            signAlert = SignAlert(message: result.ok ? (result.note ?? "Signing queued — check Library › Signed shortly.") : (result.error ?? "Sign request failed."))
         } catch {
             signAlert = SignAlert(message: error.localizedDescription)
         }

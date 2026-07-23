@@ -1,26 +1,28 @@
 import SwiftUI
 
 enum AppTab: String, CaseIterable, Identifiable, Codable {
-    case search, library, signed, status, settings
+    case search, library, diagnostics, settings
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .search: return "Search"
         case .library: return "Library"
-        case .signed: return "Signed"
-        case .status: return "Status"
+        case .diagnostics: return "Diagnostics"
         case .settings: return "Settings"
         }
     }
 
+    // Tab bar icons stay SF Symbols on purpose — UITabBarItem rendering,
+    // selection state and accessibility are all tuned around them, and
+    // reproducing that faithfully with custom glyphs isn't worth the risk.
+    // Every icon INSIDE the app (rows, buttons, headers) uses Glyph instead.
     var icon: String {
         switch self {
         case .search: return "magnifyingglass"
-        case .library: return "star"
-        case .signed: return "checkmark.seal"
-        case .status: return "heart.text.square"
-        case .settings: return "gear"
+        case .library: return "tray.full"
+        case .diagnostics: return "waveform.path.ecg"
+        case .settings: return "gearshape"
         }
     }
 
@@ -29,8 +31,7 @@ enum AppTab: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .search: SearchView()
         case .library: LibraryView()
-        case .signed: SignedView()
-        case .status: StatusView()
+        case .diagnostics: DiagnosticsView()
         case .settings: SettingsView()
         }
     }

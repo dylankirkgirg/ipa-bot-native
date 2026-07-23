@@ -13,7 +13,7 @@ struct ChangelogView: View {
         NavigationStack {
             List {
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
                 }
                 if let result {
                     if result.versions.isEmpty {
@@ -22,9 +22,9 @@ struct ChangelogView: View {
                     ForEach(result.versions) { v in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text("v\(v.version)").font(.headline)
+                                Text("v\(v.version)").font(Ledger.heading(14, weight: .semibold))
                                 if let date = v.date {
-                                    Text(date).font(.caption).foregroundStyle(.secondary)
+                                    Text(date).font(Ledger.mono(11)).foregroundStyle(.secondary)
                                 }
                             }
                             if let notes = v.notes {
@@ -36,6 +36,7 @@ struct ChangelogView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .ledgerBackground()
             .navigationTitle(result?.app_name ?? query)
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

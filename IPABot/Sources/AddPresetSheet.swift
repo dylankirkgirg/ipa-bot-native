@@ -19,7 +19,7 @@ struct AddPresetSheet: View {
                     TextField("Preset name", text: $name)
                         .autocorrectionDisabled()
                 } header: {
-                    Label("Add Preset", systemImage: "square.stack.3d.up.fill")
+                    Text("Add Preset")
                 }
                 Section("Tweaks (\(selected.count))") {
                     if isLoadingTweaks {
@@ -35,16 +35,17 @@ struct AddPresetSheet: View {
                                 Text(tweak.name).foregroundStyle(.primary)
                                 Spacer()
                                 if selected.contains(tweak.id) {
-                                    Image(systemName: "checkmark").foregroundStyle(.blue)
+                                    Glyph(.check, size: 13, color: Ledger.accent)
                                 }
                             }
                         }
                     }
                 }
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
                 }
             }
+            .ledgerBackground()
             .navigationTitle("Add Preset")
             .navigationBarTitleDisplayMode(.inline)
             .task { await loadTweaks() }

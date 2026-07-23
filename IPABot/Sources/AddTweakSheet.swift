@@ -26,14 +26,15 @@ struct AddTweakSheet: View {
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     TextField("Emoji", text: $emoji)
                 } header: {
-                    Label("Add Custom Tweak", systemImage: "wrench.and.screwdriver")
+                    Text("Add Custom Tweak")
                 } footer: {
                     Text("Saved to your catalog permanently — shows up for this bundle everywhere.")
                 }
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
                 }
             }
+            .ledgerBackground()
             .navigationTitle("Add Tweak")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

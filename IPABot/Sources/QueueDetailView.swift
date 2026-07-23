@@ -11,14 +11,14 @@ struct QueueDetailView: View {
     var body: some View {
         List {
             if let errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                Text(errorMessage).foregroundStyle(Ledger.accent)
             }
             if pending.isEmpty && !isLoading {
                 Text("Queue is empty.").foregroundStyle(.secondary)
             }
             ForEach(pending) { job in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(job.status ?? "pending").font(.caption).foregroundStyle(.secondary)
+                    Text(job.status ?? "pending").font(Ledger.mono(11)).foregroundStyle(.secondary)
                     Text(job.url ?? job.id).font(.subheadline).lineLimit(2)
                 }
             }
@@ -27,6 +27,7 @@ struct QueueDetailView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .ledgerBackground()
         .navigationTitle(type == "inject" ? "Inject Queue" : "Decrypt Queue")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

@@ -21,54 +21,43 @@ struct SignInstallView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if let cert {
-                        WebCard {
-                            Text("SIGNING WITH:")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(WebTheme.textSecondary)
-                            Text(cert.name ?? "configured")
-                                .font(.system(size: 13, design: .monospaced))
-                                .foregroundStyle(WebTheme.success)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("SIGNING WITH").font(Ledger.heading(10, weight: .bold)).tracking(0.6).foregroundColor(Ledger.ok)
+                            Text(cert.name ?? "configured").font(Ledger.mono(13)).foregroundColor(Ledger.text)
                             if let expiry = cert.expiry {
-                                Text("Expires: \(expiry)")
-                                    .font(.caption)
-                                    .foregroundStyle(WebTheme.textSecondary)
+                                Text("Expires \(expiry)").font(Ledger.body(11)).foregroundColor(Ledger.textSecondary)
                             }
                         }
-                        .background(WebTheme.successBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(WebTheme.successBorder, lineWidth: 1))
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Ledger.okBg)
+                        .overlay(Rectangle().stroke(Ledger.ok, lineWidth: 1))
                     } else {
-                        WebCard {
-                            Label("No signing certificate configured", systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(WebTheme.warning)
-                            Text("Add one in Settings first.")
-                                .font(.caption).foregroundStyle(WebTheme.textSecondary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("No signing certificate configured").font(Ledger.body(13)).foregroundColor(Ledger.accent)
+                            Text("Add one in Settings first.").font(Ledger.body(11)).foregroundColor(Ledger.textSecondary)
                         }
+                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                        .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
                     }
 
-                    if step == 1 {
-                        stepOne
-                    } else {
-                        stepTwo
-                    }
+                    if step == 1 { stepOne } else { stepTwo }
 
                     if let statusNote {
-                        Text(statusNote).foregroundStyle(WebTheme.success).font(.subheadline)
+                        Text(statusNote).foregroundColor(Ledger.ok).font(Ledger.body(13))
                     }
                     if let errorMessage {
-                        Text(errorMessage).foregroundStyle(WebTheme.danger).font(.subheadline)
+                        Text(errorMessage).foregroundColor(Ledger.accent).font(Ledger.body(13))
                     }
                 }
                 .padding(16)
             }
-            .webBackground()
+            .ledgerBackground()
             .navigationTitle("Sign & Install")
+            .navigationBarTitleDisplayMode(.inline)
             .task { await loadCert() }
             .sheet(isPresented: $pickerActive) {
-                DocumentPicker { url in
-                    pickerActive = false
-                    Task { await uploadPicked(url: url) }
-                }
+                DocumentPicker { url in pickerActive = false; Task { await uploadPicked(url: url) } }
             }
         }
     }
@@ -76,55 +65,38 @@ struct SignInstallView: View {
     @ViewBuilder
     private var stepOne: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Step 1 — Add the IPA")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(WebTheme.textPrimary)
-            Text("Pick a file, or paste a direct download URL.")
-                .font(.caption).foregroundStyle(WebTheme.textSecondary)
+            Text("Step 1 — Add the IPA").font(Ledger.heading(16, weight: .semibold)).foregroundColor(Ledger.text)
+            Text("Pick a file, or paste a direct download URL.").font(Ledger.body(12)).foregroundColor(Ledger.textSecondary)
 
-            Button {
-                pickerActive = true
-            } label: {
+            Button { pickerActive = true } label: {
                 VStack(spacing: 6) {
-                    if isUploading {
-                        ProgressView()
-                    } else {
-                        Image(systemName: "shippingbox").font(.title2)
-                        Text(uploadedName ?? "Tap to choose a file")
-                            .font(.subheadline)
+                    if isUploading { ProgressView() }
+                    else {
+                        Glyph(.download, size: 22, color: Ledger.textSecondary)
+                        Text(uploadedName ?? "Tap to choose a file").font(Ledger.body(14))
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 28)
+                .frame(maxWidth: .infinity).padding(.vertical, 28)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(WebTheme.textSecondary)
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5])).foregroundStyle(WebTheme.cardBorderStrong))
+            .foregroundColor(Ledger.textSecondary)
+            .overlay(Rectangle().strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5])).foregroundColor(Ledger.divider))
 
-            Text("— or paste a URL —")
-                .font(.caption2).foregroundStyle(WebTheme.textSecondary)
+            Text("— or paste a URL —").font(Ledger.body(11)).foregroundColor(Ledger.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             TextField("https://…/app.ipa", text: $ipaUrl)
-                .textFieldStyle(.plain)
-                .padding(10)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .background(WebTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(WebTheme.cardBorder, lineWidth: 1))
+                .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                .font(Ledger.mono(13))
+                .padding(10).overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
 
-            Text("App name (optional)").font(.caption).foregroundStyle(WebTheme.textSecondary)
+            Text("App name (optional)").font(Ledger.body(12)).foregroundColor(Ledger.textSecondary)
             TextField("My App", text: $appName)
-                .textFieldStyle(.plain)
-                .padding(10)
-                .background(WebTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(WebTheme.cardBorder, lineWidth: 1))
+                .font(Ledger.body(14))
+                .padding(10).overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
 
             Button("Next — options →") { step = 2 }
-                .buttonStyle(WebPrimaryButtonStyle())
+                .buttonStyle(LedgerPrimaryButtonStyle())
                 .disabled(resolvedUrl.isEmpty)
         }
     }
@@ -132,34 +104,40 @@ struct SignInstallView: View {
     @ViewBuilder
     private var stepTwo: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Step 2 — Options")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(WebTheme.textPrimary)
+            Text("Step 2 — Options").font(Ledger.heading(16, weight: .semibold)).foregroundColor(Ledger.text)
 
-            Picker("Compression", selection: $options.compress) {
-                Text("Speed").tag("speed")
-                Text("Size").tag("size")
+            HStack(spacing: 0) {
+                segment("Speed", isOn: options.compress == "speed") { options.compress = "speed" }
+                segment("Size", isOn: options.compress == "size") { options.compress = "size" }
             }
-            .pickerStyle(.segmented)
+            .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
 
-            Toggle("Remove unsupported UI", isOn: $options.rm_uisupported)
-            Toggle("Set minimum OS", isOn: $options.set_minos)
-            Toggle("Remove plug-ins", isOn: $options.rm_plugins)
-            Toggle("Remove watch app", isOn: $options.rm_watch)
-            Toggle("Remove URL scheme", isOn: $options.rm_urlscheme)
-            Toggle("Document browser", isOn: $options.doc_browser)
-            Toggle("Remove provisioning", isOn: $options.rm_provision)
+            LedgerToggleRow(label: "Remove unsupported UI", isOn: $options.rm_uisupported)
+            LedgerToggleRow(label: "Set minimum OS", isOn: $options.set_minos)
+            LedgerToggleRow(label: "Remove plug-ins", isOn: $options.rm_plugins)
+            LedgerToggleRow(label: "Remove watch app", isOn: $options.rm_watch)
+            LedgerToggleRow(label: "Remove URL scheme", isOn: $options.rm_urlscheme)
+            LedgerToggleRow(label: "Document browser", isOn: $options.doc_browser)
+            LedgerToggleRow(label: "Remove provisioning", isOn: $options.rm_provision)
 
-            HStack(spacing: 10) {
-                Button("← Back") { step = 1 }
-                    .buttonStyle(WebPrimaryButtonStyle(color: WebTheme.card))
-                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(WebTheme.cardBorder, lineWidth: 1))
+            HStack(spacing: 8) {
+                Button("Back") { step = 1 }.buttonStyle(LedgerOutlineButtonStyle()).frame(maxWidth: 110)
                 Button(isBusy ? "Signing…" : "Sign") { Task { await sign() } }
-                    .buttonStyle(WebPrimaryButtonStyle())
+                    .buttonStyle(LedgerPrimaryButtonStyle())
                     .disabled(isBusy || cert == nil)
             }
         }
-        .tint(WebTheme.accent)
+    }
+
+    private func segment(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title.uppercased())
+                .font(Ledger.heading(12, weight: .bold)).tracking(0.4)
+                .frame(maxWidth: .infinity).padding(.vertical, 9)
+                .foregroundColor(isOn ? Ledger.bg : Ledger.textSecondary)
+                .background(isOn ? Ledger.text : Color.clear)
+        }
+        .buttonStyle(.plain)
     }
 
     private var resolvedUrl: String {
@@ -168,17 +146,11 @@ struct SignInstallView: View {
     }
     @State private var uploadedUrl = ""
 
-    private func loadCert() async {
-        cert = try? await api.certs().certs.first
-    }
+    private func loadCert() async { cert = try? await api.certs().certs.first }
 
     private func uploadPicked(url: URL) async {
         isUploading = true; errorMessage = nil
-        guard url.startAccessingSecurityScopedResource() else {
-            errorMessage = "Couldn't access the picked file."
-            isUploading = false
-            return
-        }
+        guard url.startAccessingSecurityScopedResource() else { errorMessage = "Couldn't access the picked file."; isUploading = false; return }
         defer { url.stopAccessingSecurityScopedResource() }
         do {
             let data = try Data(contentsOf: url)
@@ -186,9 +158,7 @@ struct SignInstallView: View {
             uploadedUrl = uploaded.url
             uploadedName = uploaded.name
             if appName.isEmpty { appName = url.deletingPathExtension().lastPathComponent }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        } catch { errorMessage = error.localizedDescription }
         isUploading = false
     }
 
@@ -198,15 +168,11 @@ struct SignInstallView: View {
             let name = appName.isEmpty ? (URL(string: resolvedUrl)?.lastPathComponent ?? "app") : appName
             let result = try await api.sign(ipaUrl: resolvedUrl, ipaName: name, options: options)
             if result.ok {
-                statusNote = result.note ?? "Signing queued — check the Signed tab shortly."
+                statusNote = result.note ?? "Signing queued — check Library › Signed shortly."
                 step = 1
                 ipaUrl = ""; appName = ""; uploadedName = nil; uploadedUrl = ""
-            } else {
-                errorMessage = result.error ?? "Sign request failed."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+            } else { errorMessage = result.error ?? "Sign request failed." }
+        } catch { errorMessage = error.localizedDescription }
         isBusy = false
     }
 }

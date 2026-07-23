@@ -17,13 +17,13 @@ struct DiffView: View {
                         .autocorrectionDisabled()
                         .onSubmit { Task { await run() } }
                 } header: {
-                    Label("Diff", systemImage: "arrow.left.arrow.right")
+                    Text("Diff")
                 } footer: {
                     Text("Vanilla vs modded builds side by side.")
                 }
 
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Ledger.accent)
                 }
 
                 if let result {
@@ -42,6 +42,7 @@ struct DiffView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .ledgerBackground()
             .navigationTitle("Diff")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

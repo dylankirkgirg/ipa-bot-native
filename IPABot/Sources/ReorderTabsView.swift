@@ -16,6 +16,7 @@ struct ReorderTabsView: View {
                 Text("Drag to reorder your tab bar.")
             }
         }
+        .ledgerBackground()
         .navigationTitle("Reorder Tabs")
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))

@@ -20,23 +20,23 @@ struct DecryptView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Label("Decrypt", systemImage: "lock.open")
+                    Text("Decrypt")
                 } footer: {
                     Text("apps.apple.com/… or testflight.apple.com/join/…")
                 }
 
                 if let statusNote {
                     Section {
-                        Label(statusNote, systemImage: isBusy ? "hourglass" : "checkmark.circle.fill")
-                            .foregroundStyle(isBusy ? Color.secondary : Color.green)
+                        Text(statusNote).foregroundStyle(isBusy ? Color.secondary : Ledger.ok)
                     }
                 }
                 if let errorMessage {
                     Section {
-                        Text(errorMessage).foregroundStyle(.red)
+                        Text(errorMessage).foregroundStyle(Ledger.accent)
                     }
                 }
             }
+            .ledgerBackground()
             .navigationTitle("Decrypt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

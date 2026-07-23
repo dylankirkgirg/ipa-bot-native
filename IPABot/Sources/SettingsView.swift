@@ -26,153 +26,33 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                if forceOnboarding {
-                    Section {
-                        Label("Point this at your ipa-bot deployment to get started.", systemImage: "arrow.down.circle")
-                            .foregroundStyle(.secondary)
-                    }
-                }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Settings").font(Ledger.heading(26)).padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 8)
 
-                if api.isConfigured && !editingConnection {
-                    Section {
-                        Button {
-                            editingConnection = true
-                        } label: {
-                            HStack {
-                                Label("Connected — \(hostLabel)", systemImage: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                                Spacer()
-                                Text("Change").foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                } else {
-                    Section {
-                        TextField("Base URL", text: $api.baseURL)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        SecureField("X-Inject-Secret", text: $api.secret)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        if api.isConfigured {
-                            Button("Done") { editingConnection = false }
-                        }
-                    } header: {
-                        Label("Connection", systemImage: "server.rack")
-                    } footer: {
-                        Text("HTTPS only — the secret is sent as a header on every request and stored in Keychain.")
-                    }
-                }
-
-                Section {
-                    if let cert {
-                        LabeledContent("Certificate", value: cert.name ?? "configured")
-                        if let expiry = cert.expiry {
-                            LabeledContent("Expires", value: expiry)
-                        }
-                        Label(cert.has_profile == true ? "Provisioning profile on file" : "No provisioning profile",
-                              systemImage: cert.has_profile == true ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                            .foregroundStyle(cert.has_profile == true ? Color.green : Color.orange)
-                    } else {
-                        Text("No signing certificate configured yet.").foregroundStyle(.secondary)
+                    if forceOnboarding {
+                        Text("Point this at your ipa-bot deployment to get started.")
+                            .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
+                            .padding(.horizontal, 20).padding(.bottom, 12)
                     }
 
-                    Button {
-                        pickerTarget = .p12
-                    } label: {
-                        Label("Upload .p12", systemImage: "doc.badge.plus")
-                    }.disabled(isBusy || !api.isConfigured)
+                    LedgerSectionLabel(text: "Connection")
+                    connectionSection
 
-                    Button {
-                        pickerTarget = .profile
-                    } label: {
-                        Label("Upload Provisioning Profile", systemImage: "doc.badge.plus")
-                    }.disabled(isBusy || !api.isConfigured)
+                    LedgerSectionLabel(text: "Signing certificate")
+                    certSection
 
-                    HStack {
-                        SecureField("Certificate password", text: $certPassword)
-                        Button("Save") { Task { await savePassword() } }
-                            .disabled(isBusy || certPassword.isEmpty)
-                    }
+                    LedgerSectionLabel(text: "Appearance")
+                    appearanceSection
 
-                    Toggle(isOn: Binding(
-                        get: { autosignOn },
-                        set: { newValue in Task { await toggleAutosign(newValue) } }
-                    )) {
-                        Label("Auto-sign starred updates", systemImage: "wand.and.stars")
-                    }
-                    .disabled(isTogglingAutosign || cert == nil)
-
-                    if let statusNote {
-                        Label(statusNote, systemImage: isBusy ? "hourglass" : "checkmark.circle.fill")
-                            .foregroundStyle(isBusy ? Color.secondary : Color.green)
-                    }
-                    if let errorMessage {
-                        Text(errorMessage).foregroundStyle(.red)
-                    }
-                } header: {
-                    Label("Signing Certificate", systemImage: "signature")
-                } footer: {
-                    Text("Used to sign IPAs when you tap Sign or Inject. Same cert as /addcert on Telegram.")
-                }
-
-                Section {
-                    Picker("Appearance", selection: $api.theme) {
-                        ForEach(AppTheme.allCases) { t in
-                            Text(t.label).tag(t)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    NavigationLink {
-                        ReorderTabsView()
-                    } label: {
-                        Label("Reorder Tabs", systemImage: "arrow.up.arrow.down")
-                    }
-                } header: {
-                    Label("Appearance", systemImage: "circle.lefthalf.filled")
-                }
-
-                if api.isConfigured {
-                    Section {
-                        Button {
-                            Task { await runBackup() }
-                        } label: {
-                            Label("Back Up Now", systemImage: "icloud.and.arrow.up")
-                        }.disabled(isBusyAdvanced)
-
-                        Button {
-                            Task { await runExport() }
-                        } label: {
-                            Label("Export State (.json)", systemImage: "square.and.arrow.up")
-                        }.disabled(isBusyAdvanced)
-
-                        ForEach(restartableServices, id: \.self) { service in
-                            Button {
-                                Task { await restart(service) }
-                            } label: {
-                                HStack {
-                                    Label("Restart \(service)", systemImage: "arrow.clockwise")
-                                    Spacer()
-                                    if restartingService == service {
-                                        ProgressView()
-                                    }
-                                }
-                            }.disabled(isBusyAdvanced)
-                        }
-
-                        if let advancedNote {
-                            Text(advancedNote).foregroundStyle(.secondary)
-                        }
-                    } header: {
-                        Label("Advanced", systemImage: "wrench.and.screwdriver")
-                    } footer: {
-                        Text("Backup/export mirror /backup and /export on Telegram. Restart bounces one on-box service (finder, relay, inject, bot API, or the A1 sniper).")
+                    if api.isConfigured {
+                        LedgerSectionLabel(text: "Advanced")
+                        advancedSection
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .ledgerBackground()
+            .navigationBarHidden(true)
             .task { await loadCert() }
             .sheet(item: $pickerTarget) { target in
                 DocumentPicker { url in
@@ -180,22 +60,175 @@ struct SettingsView: View {
                     Task { await upload(url: url, part: target) }
                 }
             }
-            .sheet(item: $exportTarget) { target in
-                ShareSheet(items: [target.url])
+            .sheet(item: $exportTarget) { target in ShareSheet(items: [target.url]) }
+        }
+    }
+
+    private var connectionSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if api.isConfigured && !editingConnection {
+                Button { editingConnection = true } label: {
+                    HStack {
+                        LedgerStatusDot(ok: true)
+                        Text(hostLabel).font(Ledger.mono(13)).foregroundColor(Ledger.text)
+                        Spacer()
+                        Text("Change").font(Ledger.body(12)).foregroundColor(Ledger.textSecondary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 9)
+                .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+                .padding(.horizontal, 20)
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField("Base URL", text: $api.baseURL)
+                        .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .font(Ledger.mono(13))
+                        .padding(10).overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+                    SecureField("X-Inject-Secret", text: $api.secret)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .font(Ledger.mono(13))
+                        .padding(10).overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+                    if api.isConfigured {
+                        Button("Done") { editingConnection = false }.buttonStyle(LedgerOutlineButtonStyle())
+                    }
+                    Text("HTTPS only — the secret is sent as a header on every request and stored in Keychain.")
+                        .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary)
+                }
+                .padding(.horizontal, 20).padding(.bottom, 12)
             }
         }
     }
 
-    private var hostLabel: String {
-        URL(string: api.baseURL)?.host ?? api.baseURL
+    private var certSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let cert {
+                LedgerKeyValueRow(key: "Certificate", value: cert.name ?? "configured", valueIsMono: false)
+                if let expiry = cert.expiry { LedgerKeyValueRow(key: "Expires", value: expiry) }
+                HStack {
+                    LedgerStatusDot(ok: cert.has_profile == true)
+                    Text(cert.has_profile == true ? "Provisioning profile on file" : "No provisioning profile")
+                        .font(Ledger.body(13)).foregroundColor(Ledger.text)
+                }
+                .padding(.vertical, 9)
+                .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+            } else {
+                Text("No signing certificate configured yet.").font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
+                    .padding(.vertical, 9)
+                    .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+            }
+
+            Button("Upload .p12") { pickerTarget = .p12 }
+                .buttonStyle(LedgerOutlineButtonStyle())
+                .disabled(isBusy || !api.isConfigured)
+                .padding(.vertical, 4)
+            Button("Upload Provisioning Profile") { pickerTarget = .profile }
+                .buttonStyle(LedgerOutlineButtonStyle())
+                .disabled(isBusy || !api.isConfigured)
+                .padding(.vertical, 4)
+
+            HStack {
+                SecureField("Certificate password", text: $certPassword).font(Ledger.body(14))
+                Button("Save") { Task { await savePassword() } }
+                    .buttonStyle(LedgerOutlineButtonStyle()).frame(width: 80)
+                    .disabled(isBusy || certPassword.isEmpty)
+            }
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
+            LedgerToggleRow(label: "Auto-sign starred updates", isOn: Binding(
+                get: { autosignOn },
+                set: { newValue in Task { await toggleAutosign(newValue) } }
+            ))
+            .opacity(isTogglingAutosign || cert == nil ? 0.5 : 1)
+            .disabled(isTogglingAutosign || cert == nil)
+
+            if let statusNote {
+                Text(statusNote).font(Ledger.body(12)).foregroundColor(isBusy ? Ledger.textSecondary : Ledger.ok)
+                    .padding(.top, 6)
+            }
+            if let errorMessage {
+                Text(errorMessage).font(Ledger.body(12)).foregroundColor(Ledger.accent).padding(.top, 6)
+            }
+            Text("Used to sign IPAs when you tap Sign or Inject. Same cert as /addcert on Telegram.")
+                .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary).padding(.top, 8)
+        }
+        .padding(.horizontal, 20).padding(.bottom, 12)
     }
 
-    private func loadCert() async {
-        do {
-            cert = try await api.certs().certs.first
-        } catch {
-            // no cert configured yet — not an error worth surfacing on load
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 0) {
+                ForEach(AppTheme.allCases) { t in
+                    Button { api.theme = t } label: {
+                        Text(t.label.uppercased())
+                            .font(Ledger.heading(11, weight: .bold)).tracking(0.4)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .foregroundColor(api.theme == t ? Ledger.bg : Ledger.textSecondary)
+                            .background(api.theme == t ? Ledger.text : Color.clear)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+
+            NavigationLink { ReorderTabsView() } label: {
+                HStack {
+                    Text("Reorder tabs").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                    Spacer()
+                    Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
+                }
+            }
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
         }
+        .padding(.horizontal, 20).padding(.bottom, 12)
+    }
+
+    private var advancedSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button { Task { await runBackup() } } label: {
+                HStack { Glyph(.share, size: 15, color: Ledger.textSecondary); Text("Back up now").font(Ledger.body(14)).foregroundColor(Ledger.text) }
+            }
+            .disabled(isBusyAdvanced)
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
+            Button { Task { await runExport() } } label: {
+                HStack { Glyph(.download, size: 15, color: Ledger.textSecondary); Text("Export state (.json)").font(Ledger.body(14)).foregroundColor(Ledger.text) }
+            }
+            .disabled(isBusyAdvanced)
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
+            ForEach(restartableServices, id: \.self) { service in
+                Button { Task { await restart(service) } } label: {
+                    HStack {
+                        Glyph(.refresh, size: 15, color: Ledger.textSecondary)
+                        Text("Restart \(service)").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                        Spacer()
+                        if restartingService == service { ProgressView() }
+                    }
+                }
+                .disabled(isBusyAdvanced)
+                .padding(.vertical, 9)
+                .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+            }
+
+            if let advancedNote {
+                Text(advancedNote).font(Ledger.body(12)).foregroundColor(Ledger.textSecondary).padding(.top, 8)
+            }
+            Text("Backup/export mirror /backup and /export on Telegram. Restart bounces one on-box service.")
+                .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary).padding(.top, 8)
+        }
+        .padding(.horizontal, 20).padding(.bottom, 24)
+    }
+
+    private var hostLabel: String { URL(string: api.baseURL)?.host ?? api.baseURL }
+
+    private func loadCert() async {
+        do { cert = try await api.certs().certs.first } catch {}
         autosignOn = (try? await api.status())?.autosign ?? false
     }
 
@@ -203,56 +236,33 @@ struct SettingsView: View {
         isTogglingAutosign = true
         do {
             let result = try await api.setAutosign(on)
-            if result.ok {
-                autosignOn = on
-            } else {
-                advancedNote = result.error ?? "Couldn't update auto-sign."
-            }
-        } catch {
-            advancedNote = error.localizedDescription
-        }
+            if result.ok { autosignOn = on } else { advancedNote = result.error ?? "Couldn't update auto-sign." }
+        } catch { advancedNote = error.localizedDescription }
         isTogglingAutosign = false
     }
 
     private func upload(url: URL, part: CertPart) async {
         isBusy = true; errorMessage = nil; statusNote = nil
         defer { isBusy = false }
-        guard url.startAccessingSecurityScopedResource() else {
-            errorMessage = "Couldn't access the picked file."
-            return
-        }
+        guard url.startAccessingSecurityScopedResource() else { errorMessage = "Couldn't access the picked file."; return }
         defer { url.stopAccessingSecurityScopedResource() }
         do {
             let data = try Data(contentsOf: url)
             let uploaded = try await api.uploadFile(data: data, filename: url.lastPathComponent)
-            let result = try await api.submitCertPart(
-                part: part == .p12 ? "p12" : "profile",
-                ipaUrl: uploaded.url, fileName: uploaded.name
-            )
+            let result = try await api.submitCertPart(part: part == .p12 ? "p12" : "profile", ipaUrl: uploaded.url, fileName: uploaded.name)
             if result.ok {
                 statusNote = (part == .p12 ? ".p12" : "Profile") + " uploaded."
                 await loadCert()
-            } else {
-                errorMessage = result.error ?? "Upload failed."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+            } else { errorMessage = result.error ?? "Upload failed." }
+        } catch { errorMessage = error.localizedDescription }
     }
 
     private func savePassword() async {
         isBusy = true; errorMessage = nil; statusNote = nil
         do {
             let result = try await api.submitCertPart(part: "password", password: certPassword)
-            if result.ok {
-                statusNote = "Password saved."
-                certPassword = ""
-            } else {
-                errorMessage = result.error ?? "Couldn't save password."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+            if result.ok { statusNote = "Password saved."; certPassword = "" } else { errorMessage = result.error ?? "Couldn't save password." }
+        } catch { errorMessage = error.localizedDescription }
         isBusy = false
     }
 
@@ -261,19 +271,13 @@ struct SettingsView: View {
         do {
             let result = try await api.backupNow()
             advancedNote = result.ok ? "Backup delivered." : (result.error ?? "Backup failed.")
-        } catch {
-            advancedNote = error.localizedDescription
-        }
+        } catch { advancedNote = error.localizedDescription }
         isBusyAdvanced = false
     }
 
     private func runExport() async {
         isBusyAdvanced = true; advancedNote = nil
-        do {
-            exportTarget = ShareTarget(url: try await api.exportDump())
-        } catch {
-            advancedNote = error.localizedDescription
-        }
+        do { exportTarget = ShareTarget(url: try await api.exportDump()) } catch { advancedNote = error.localizedDescription }
         isBusyAdvanced = false
     }
 
@@ -282,9 +286,7 @@ struct SettingsView: View {
         do {
             let result = try await api.restartService(service)
             advancedNote = result.ok ? "\(service) restarted." : (result.error ?? "Restart failed.")
-        } catch {
-            advancedNote = error.localizedDescription
-        }
+        } catch { advancedNote = error.localizedDescription }
         isBusyAdvanced = false
         restartingService = nil
     }
