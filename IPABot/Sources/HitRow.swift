@@ -4,6 +4,7 @@ struct HitRow: View {
     let hit: Hit
     var onStar: (() -> Void)? = nil
     var onDownload: (() -> Void)? = nil
+    var onSign: (() -> Void)? = nil
     var onInject: (() -> Void)? = nil
 
     var body: some View {
@@ -39,7 +40,7 @@ struct HitRow: View {
                     .foregroundStyle(.orange)
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: 14) {
                 if let onStar {
                     Button(action: onStar) {
                         Image(systemName: (hit.starred ?? false) ? "star.fill" : "star")
@@ -54,6 +55,13 @@ struct HitRow: View {
                     }
                     .buttonStyle(.plain)
                 }
+                if let onSign {
+                    Button(action: onSign) {
+                        Image(systemName: "signature")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
                 if let onInject {
                     Button(action: onInject) {
                         Image(systemName: "wrench.and.screwdriver.fill")
@@ -62,7 +70,7 @@ struct HitRow: View {
                     .buttonStyle(.plain)
                 }
             }
-            .font(.system(size: 16))
+            .font(.system(size: 15))
         }
         .padding(.vertical, 6)
     }
