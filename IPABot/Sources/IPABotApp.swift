@@ -8,6 +8,8 @@ struct IPABotApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(api)
+                .tint(Color("AccentColor"))
+                .preferredColorScheme(api.theme.colorScheme)
         }
     }
 }

@@ -160,6 +160,27 @@ struct JobPollResult: Codable {
 
 struct EmptyResponse: Codable {}
 
+struct CertInfo: Codable, Identifiable {
+    var name: String?
+    var expiry: String?
+    var has_profile: Bool?
+    var id: String { name ?? "cert" }
+}
+
+struct CertsResponse: Codable {
+    var certs: [CertInfo]
+}
+
+struct UploadResponse: Codable {
+    var url: String
+    var name: String
+}
+
+struct ActionResult: Codable {
+    var ok: Bool
+    var error: String?
+}
+
 struct ServiceBeat: Codable {
     var ageSec: Int
     var fresh: Bool
