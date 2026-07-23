@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var statusNote: String?
     @State private var errorMessage: String?
     @State private var pickerTarget: CertPart?
+    @State private var editingConnection = false
 
     private enum CertPart: Identifiable { case p12, profile
         var id: Int { self == .p12 ? 0 : 1 }
@@ -25,21 +26,36 @@ struct SettingsView: View {
                     }
                 }
 
-                Section {
-                    TextField("Base URL", text: $api.baseURL)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    SecureField("X-Inject-Secret", text: $api.secret)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    if api.isConfigured {
-                        Label("Connected", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                if api.isConfigured && !editingConnection {
+                    Section {
+                        Button {
+                            editingConnection = true
+                        } label: {
+                            HStack {
+                                Label("Connected — \(hostLabel)", systemImage: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Spacer()
+                                Text("Change").foregroundStyle(.secondary)
+                            }
+                        }
                     }
-                } header: {
-                    Label("Connection", systemImage: "server.rack")
-                } footer: {
-                    Text("HTTPS only — the secret is sent as a header on every request and stored in Keychain.")
+                } else {
+                    Section {
+                        TextField("Base URL", text: $api.baseURL)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        SecureField("X-Inject-Secret", text: $api.secret)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        if api.isConfigured {
+                            Button("Done") { editingConnection = false }
+                        }
+                    } header: {
+                        Label("Connection", systemImage: "server.rack")
+                    } footer: {
+                        Text("HTTPS only — the secret is sent as a header on every request and stored in Keychain.")
+                    }
                 }
 
                 Section {
@@ -106,6 +122,10 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var hostLabel: String {
+        URL(string: api.baseURL)?.host ?? api.baseURL
     }
 
     private func loadCert() async {
