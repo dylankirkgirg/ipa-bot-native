@@ -1,0 +1,64 @@
+import SwiftUI
+
+struct StatusView: View {
+    @EnvironmentObject var api: APIClient
+    @State private var status: StatusResponse?
+    @State private var errorMessage: String?
+    @State private var isLoading = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.red)
+                }
+                if let status {
+                    Section("Services") {
+                        beatRow("Finder", status.services.finder)
+                        beatRow("Relay", status.services.relay)
+                        beatRow("Inject", status.services.inject)
+                    }
+                    Section("Queues") {
+                        LabeledContent("Decrypt", value: "\(status.queues.decrypt)")
+                        LabeledContent("Inject", value: "\(status.queues.inject)")
+                    }
+                    Section("Stats") {
+                        LabeledContent("Signed apps", value: "\(status.signCount)")
+                        LabeledContent("Vault entries", value: "\(status.vaultEntries)")
+                        if !status.build.isEmpty {
+                            LabeledContent("Build", value: status.build)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Status")
+            .task { await load() }
+            .refreshable { await load() }
+            .overlay { if isLoading { ProgressView() } }
+        }
+    }
+
+    @ViewBuilder
+    private func beatRow(_ label: String, _ beat: ServiceBeat) -> some View {
+        HStack {
+            Circle()
+                .fill(beat.fresh ? .green : .red)
+                .frame(width: 10, height: 10)
+            Text(label)
+            Spacer()
+            Text(beat.ageSec < 0 ? "never" : "\(beat.ageSec)s ago")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func load() async {
+        isLoading = true; errorMessage = nil
+        do {
+            status = try await api.status()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+}
