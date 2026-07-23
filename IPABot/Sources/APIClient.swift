@@ -129,4 +129,20 @@ final class APIClient: ObservableObject {
     func removeSource(name: String) async throws {
         try await post("/api/source-remove", body: ["name": name])
     }
+
+    func inject(hit: Hit, tweakIds: [String]) async throws -> InjectResult {
+        let hitData = try JSONEncoder().encode(hit)
+        let hitDict = try JSONSerialization.jsonObject(with: hitData) as? [String: Any] ?? [:]
+        return try await post("/api/inject", body: ["hit": hitDict, "tweak_ids": tweakIds])
+    }
+
+    func injectResult(id: String) async throws -> JobPollResult {
+        try await get("/api/inject-result", query: ["id": id])
+    }
+
+    func sign(ipaUrl: String, ipaName: String, options: SignOptions) async throws -> SignResult {
+        let optData = try JSONEncoder().encode(options)
+        let optDict = try JSONSerialization.jsonObject(with: optData) as? [String: Any] ?? [:]
+        return try await post("/api/sign", body: ["ipa_url": ipaUrl, "ipa_name": ipaName, "options": optDict])
+    }
 }

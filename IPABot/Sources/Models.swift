@@ -151,6 +151,13 @@ struct InjectResult: Codable {
     var error: String?
 }
 
+struct JobPollResult: Codable {
+    var pending: Bool?
+    var url: String?
+    var name: String?
+    var error: String?
+}
+
 struct EmptyResponse: Codable {}
 
 struct ServiceBeat: Codable {

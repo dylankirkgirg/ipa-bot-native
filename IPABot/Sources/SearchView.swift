@@ -8,6 +8,7 @@ struct SearchView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var downloadTarget: DownloadTarget?
+    @State private var injectTarget: Hit?
 
     var body: some View {
         NavigationStack {
@@ -26,7 +27,8 @@ struct SearchView: View {
                     HitRow(
                         hit: hit,
                         onStar: { Task { await toggleStar(hit) } },
-                        onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) }
+                        onDownload: hit.download_url.isEmpty ? nil : { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) },
+                        onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
                     )
                 }
             }
@@ -47,6 +49,9 @@ struct SearchView: View {
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
             .sheet(item: $downloadTarget) { target in
                 SafariView(url: target.url)
+            }
+            .sheet(item: $injectTarget) { hit in
+                InjectView(hit: hit)
             }
         }
     }
