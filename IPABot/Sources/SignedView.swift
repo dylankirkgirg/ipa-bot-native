@@ -13,9 +13,6 @@ struct SignedView: View {
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 }
-                if signed.isEmpty && !isLoading {
-                    Text("No recently signed apps (~24h window).").foregroundStyle(.secondary)
-                }
                 ForEach(signed) { app in
                     Button {
                         installTarget = URL(string: api.baseURL + "/sign-install/" + app.id).map(DownloadTarget.init)
@@ -33,7 +30,16 @@ struct SignedView: View {
             .navigationTitle("Signed")
             .task { await load() }
             .refreshable { await load() }
-            .overlay { if isLoading { ProgressView() } }
+            .overlay {
+                if isLoading { ProgressView() }
+                else if signed.isEmpty && errorMessage == nil {
+                    VStack(spacing: 8) {
+                        Image(systemName: "checkmark.seal").font(.largeTitle).foregroundStyle(.secondary)
+                        Text("No recently signed apps").foregroundStyle(.secondary)
+                        Text("Signed apps show up here for ~24h").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
             .sheet(item: $installTarget) { target in
                 SafariView(url: target.url)
             }
