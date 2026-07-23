@@ -380,7 +380,7 @@ struct LibraryView: View {
     }
 
     private func unstar(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let bundle = stars[i].bundle_id
             do {
                 try await api.setStar(bundleId: bundle, on: false)
@@ -404,7 +404,7 @@ struct LibraryView: View {
     }
 
     private func removeWatch(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let term = watches[i].term
             do {
                 try await api.removeWatch(term: term)
@@ -416,7 +416,7 @@ struct LibraryView: View {
     }
 
     private func removeSources(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let name = sources[i].name
             do {
                 try await api.removeSource(name: name)
@@ -428,7 +428,7 @@ struct LibraryView: View {
     }
 
     private func removeNotes(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let bundle = notes[i].bundle
             do {
                 try await api.removeNote(bundle: bundle)
@@ -440,7 +440,7 @@ struct LibraryView: View {
     }
 
     private func removePins(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let bundle = pins[i].bundle
             do {
                 try await api.removePin(bundle: bundle)
@@ -452,7 +452,7 @@ struct LibraryView: View {
     }
 
     private func removeAliases(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let short = aliases[i].short
             do {
                 try await api.removeAlias(short: short)
@@ -464,7 +464,7 @@ struct LibraryView: View {
     }
 
     private func removeTfWatches(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             let id = tfWatches[i].id
             do {
                 try await api.removeTfWatch(id: id)

@@ -53,7 +53,7 @@ struct QueueDetailView: View {
     }
 
     private func cancel(at indexSet: IndexSet) async {
-        for i in indexSet {
+        for i in indexSet.sorted(by: >) {
             do {
                 try await api.cancelQueueJob(type: type, id: pending[i].id)
                 pending.remove(at: i)
