@@ -36,23 +36,26 @@ struct SearchView: View {
                         }
                     }
                 }
-                Section {
-                    ForEach(hits) { hit in
-                        Group {
-                            if hit.bundle_id.isEmpty {
+                ForEach(hits) { hit in
+                    Group {
+                        if hit.bundle_id.isEmpty {
+                            row(for: hit)
+                        } else {
+                            NavigationLink {
+                                AboutView(bundleId: hit.bundle_id, fallbackName: hit.app_name)
+                            } label: {
                                 row(for: hit)
-                            } else {
-                                NavigationLink {
-                                    AboutView(bundleId: hit.bundle_id, fallbackName: hit.app_name)
-                                } label: {
-                                    row(for: hit)
-                                }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
+                    .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
+            .webBackground()
             .navigationTitle("Search")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

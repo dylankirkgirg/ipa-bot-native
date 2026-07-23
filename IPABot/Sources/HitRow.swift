@@ -8,76 +8,78 @@ struct HitRow: View {
     var onInject: (() -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
-            AsyncImage(url: hit.icon_url.flatMap(URL.init)) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    RoundedRectangle(cornerRadius: 9)
-                        .fill(Color(.tertiarySystemFill))
-                        .overlay(Text(hit.emoji.isEmpty ? "📦" : hit.emoji).font(.subheadline))
+        WebCard {
+            HStack(alignment: .top, spacing: 12) {
+                AsyncImage(url: hit.icon_url.flatMap(URL.init)) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    default:
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.white.opacity(0.06))
+                            .overlay(Text(hit.emoji.isEmpty ? "📦" : hit.emoji).font(.title3))
+                    }
                 }
-            }
-            .frame(width: 36, height: 36)
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(hit.app_name)
-                    .font(.system(.body))
-                    .lineLimit(1)
-                Text(metaLine)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(hit.app_name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(WebTheme.textPrimary)
+                        .lineLimit(1)
+                    Text(hit.bundle_id)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(WebTheme.textSecondary)
+                        .lineLimit(1)
+                }
 
-            Spacer(minLength: 8)
+                Spacer(minLength: 4)
 
-            if hit.is_modded == true {
-                Image(systemName: "wrench.and.screwdriver.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.orange)
-            }
-
-            HStack(spacing: 14) {
                 if let onStar {
                     Button(action: onStar) {
                         Image(systemName: (hit.starred ?? false) ? "star.fill" : "star")
-                            .foregroundStyle((hit.starred ?? false) ? .yellow : .secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                if let onDownload {
-                    Button(action: onDownload) {
-                        Image(systemName: "arrow.down.circle")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                if let onSign {
-                    Button(action: onSign) {
-                        Image(systemName: "signature")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                if let onInject {
-                    Button(action: onInject) {
-                        Image(systemName: "wrench.and.screwdriver.fill")
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle((hit.starred ?? false) ? WebTheme.warning : WebTheme.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .font(.system(size: 15))
-        }
-        .padding(.vertical, 6)
-    }
 
-    private var metaLine: String {
-        var parts = ["v\(hit.version)", hit.source]
-        if hit.size_mb > 0 { parts.append("\(Int(hit.size_mb)) MB") }
-        return parts.joined(separator: " · ")
+            HStack(spacing: 6) {
+                WebPill(text: "v\(hit.version)")
+                WebPill(text: hit.source)
+                if hit.size_mb > 0 { WebPill(text: "\(Int(hit.size_mb)) MB") }
+                if hit.is_modded == true {
+                    Image(systemName: "wrench.and.screwdriver.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            if onDownload != nil || onSign != nil || onInject != nil {
+                HStack(spacing: 8) {
+                    if let onDownload {
+                        Button("Download .ipa", action: onDownload)
+                            .buttonStyle(WebPrimaryButtonStyle())
+                    }
+                    if let onSign {
+                        Button(action: onSign) {
+                            Image(systemName: "signature")
+                        }
+                        .buttonStyle(WebPrimaryButtonStyle(color: WebTheme.card))
+                        .frame(width: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(WebTheme.cardBorder, lineWidth: 1))
+                    }
+                    if let onInject {
+                        Button(action: onInject) {
+                            Image(systemName: "wrench.and.screwdriver.fill")
+                        }
+                        .buttonStyle(WebPrimaryButtonStyle(color: WebTheme.card))
+                        .frame(width: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(WebTheme.cardBorder, lineWidth: 1))
+                    }
+                }
+            }
+        }
     }
 }

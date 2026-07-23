@@ -3,6 +3,7 @@ import SwiftUI
 struct StatusView: View {
     @EnvironmentObject var api: APIClient
     @State private var status: StatusResponse?
+    @State private var sniper: SniperHeartbeat?
     @State private var errorMessage: String?
     @State private var isLoading = false
 
@@ -38,6 +39,22 @@ struct StatusView: View {
                         }
                     }
                 }
+                if let sniper {
+                    Section("A1 Sniper") {
+                        HStack {
+                            Circle()
+                                .fill(sniper.fresh ? .green : .red)
+                                .frame(width: 10, height: 10)
+                            Text(sniper.status.capitalized)
+                            Spacer()
+                            Text(sniper.ageSec < 0 ? "never" : "\(sniper.ageSec)s ago")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        LabeledContent("Attempts", value: "\(sniper.attempts)")
+                        LabeledContent("Throttles", value: "\(sniper.throttles)")
+                        LabeledContent("Capacity denials", value: "\(sniper.capacityDenials)")
+                    }
+                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Status")
@@ -68,6 +85,7 @@ struct StatusView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+        sniper = try? await api.sniper().heartbeat
         isLoading = false
     }
 }
