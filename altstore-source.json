@@ -13,7 +13,7 @@
       "versionDate": "2026-07-23T12:39:00Z",
       "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1/IPABot-1.0-1-20260723-123912.ipa",
       "localizedDescription": "Native SwiftUI client for ipa-bot.",
-      "iconURL": "",
+      "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "tintColor": "4D7AAD",
       "size": 1607482,
       "minOSVersion": "16.0",
