@@ -182,6 +182,26 @@ final class APIClient: ObservableObject {
         try await get("/api/decrypt-result", query: ["id": id])
     }
 
+    func addNote(bundle: String, text: String) async throws -> ActionResult {
+        try await post("/api/note-save", body: ["bundle": bundle, "text": text])
+    }
+
+    func addPin(bundle: String, version: String) async throws -> ActionResult {
+        try await post("/api/pin-save", body: ["bundle": bundle, "version": version])
+    }
+
+    func addAlias(short: String, full: String) async throws -> ActionResult {
+        try await post("/api/alias-save", body: ["short": short, "full": full])
+    }
+
+    func addTfWatch(url: String) async throws -> ActionResult {
+        try await post("/api/tfwatch-add", body: ["url": url])
+    }
+
+    func addSource(name: String, url: String, emoji: String) async throws -> ActionResult {
+        try await post("/api/source-add", body: ["name": name, "url": url, "emoji": emoji])
+    }
+
     // Files upload straight to the Oracle VM's control daemon, same endpoint the
     // web app uses — the Worker caps request bodies at 100MB, this bypasses it.
     private static let uploadEndpoint = URL(string: "https://129-80-130-200.sslip.io/control/upload")!
