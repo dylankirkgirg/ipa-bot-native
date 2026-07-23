@@ -1,4 +1,24 @@
 import Foundation
+import SwiftUI
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}
 
 enum APIError: Error, LocalizedError {
     case notConfigured
@@ -24,6 +44,9 @@ final class APIClient: ObservableObject {
     @Published var secret: String {
         didSet { Keychain.set(secret, for: "ipabot.secret") }
     }
+    @Published var theme: AppTheme {
+        didSet { UserDefaults.standard.set(theme.rawValue, forKey: "ipabot.theme") }
+    }
 
     var isConfigured: Bool {
         !baseURL.isEmpty && !secret.isEmpty && baseURL.lowercased().hasPrefix("https://")
@@ -36,6 +59,7 @@ final class APIClient: ObservableObject {
             UserDefaults.standard.removeObject(forKey: "ipabot.secret")
         }
         secret = Keychain.get("ipabot.secret") ?? ""
+        theme = AppTheme(rawValue: UserDefaults.standard.string(forKey: "ipabot.theme") ?? "") ?? .system
     }
 
     private func get<T: Decodable>(_ path: String, query: [String: String] = [:]) async throws -> T {
@@ -144,5 +168,34 @@ final class APIClient: ObservableObject {
         let optData = try JSONEncoder().encode(options)
         let optDict = try JSONSerialization.jsonObject(with: optData) as? [String: Any] ?? [:]
         return try await post("/api/sign", body: ["ipa_url": ipaUrl, "ipa_name": ipaName, "options": optDict])
+    }
+
+    func certs() async throws -> CertsResponse {
+        try await get("/api/certs")
+    }
+
+    // Files upload straight to the Oracle VM's control daemon, same endpoint the
+    // web app uses — the Worker caps request bodies at 100MB, this bypasses it.
+    private static let uploadEndpoint = URL(string: "https://129-80-130-200.sslip.io/control/upload")!
+
+    func uploadFile(data: Data, filename: String) async throws -> UploadResponse {
+        guard isConfigured else { throw APIError.notConfigured }
+        var req = URLRequest(url: Self.uploadEndpoint)
+        req.httpMethod = "POST"
+        req.setValue(secret, forHTTPHeaderField: "X-Inject-Secret")
+        req.setValue(filename, forHTTPHeaderField: "X-Filename")
+        let (data, resp) = try await URLSession.shared.upload(for: req, from: data)
+        guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
+            throw APIError.http((resp as? HTTPURLResponse)?.statusCode ?? -1)
+        }
+        return try JSONDecoder().decode(UploadResponse.self, from: data)
+    }
+
+    func submitCertPart(part: String, ipaUrl: String? = nil, fileName: String? = nil, password: String? = nil) async throws -> ActionResult {
+        var body: [String: Any] = ["part": part]
+        if let ipaUrl { body["ipa_url"] = ipaUrl }
+        if let fileName { body["file_name"] = fileName }
+        if let password { body["password"] = password }
+        return try await post("/api/cert-upload", body: body)
     }
 }
