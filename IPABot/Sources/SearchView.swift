@@ -11,6 +11,7 @@ struct SearchView: View {
     @State private var injectTarget: Hit?
     @State private var showDecrypt = false
     @State private var showDiff = false
+    @State private var showTrending = false
     @State private var shareTarget: ShareTarget?
     @State private var isDownloadingVault = false
     @State private var signingBundleId: String?
@@ -55,18 +56,13 @@ struct SearchView: View {
             .navigationTitle("Search")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showDecrypt = true } label: {
-                        Image(systemName: "lock.open")
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showDiff = true } label: {
-                        Image(systemName: "arrow.left.arrow.right")
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { Task { await runRandom() } } label: {
-                        Image(systemName: "dice")
+                    Menu {
+                        Button("Decrypt", systemImage: "lock.open") { showDecrypt = true }
+                        Button("Diff", systemImage: "arrow.left.arrow.right") { showDiff = true }
+                        Button("Trending", systemImage: "flame") { showTrending = true }
+                        Button("Random", systemImage: "dice") { Task { await runRandom() } }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -99,6 +95,12 @@ struct SearchView: View {
             }
             .sheet(isPresented: $showDiff) {
                 DiffView()
+            }
+            .sheet(isPresented: $showTrending) {
+                TrendingView { term in
+                    query = term
+                    Task { await runSearch() }
+                }
             }
             .sheet(item: $shareTarget) { target in
                 ShareSheet(items: [target.url])

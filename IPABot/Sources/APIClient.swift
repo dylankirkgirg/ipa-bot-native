@@ -242,6 +242,22 @@ final class APIClient: ObservableObject {
         try await get("/api/discover", query: ["bundle": bundle])
     }
 
+    func trending() async throws -> TrendingResponse {
+        try await get("/api/trending")
+    }
+
+    func queue(type: String) async throws -> QueueResponse {
+        try await get("/api/queue", query: ["type": type])
+    }
+
+    func cancelQueueJob(type: String, id: String) async throws -> ActionResult {
+        try await post("/api/queue-cancel", body: ["type": type, "id": id])
+    }
+
+    func clearQueue(type: String) async throws -> ActionResult {
+        try await post("/api/queue-clear", body: ["type": type])
+    }
+
     func backupNow() async throws -> SignResult {
         try await post("/api/backup-now", body: [:])
     }

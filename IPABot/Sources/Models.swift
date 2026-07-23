@@ -216,6 +216,28 @@ struct ChangelogVersion: Codable, Identifiable {
     var id: String { version }
 }
 
+struct TrendingResponse: Codable {
+    var trending: [TrendingEntry]
+}
+
+struct TrendingEntry: Codable, Identifiable {
+    var original: String
+    var count: Int
+    var id: String { original }
+}
+
+struct QueueResponse: Codable {
+    var type: String
+    var pending: [QueueJobEntry]
+}
+
+struct QueueJobEntry: Codable, Identifiable {
+    var id: String
+    var url: String?
+    var status: String?
+    var requested_at: String?
+}
+
 struct DiscoverResponse: Codable {
     var artist_name: String?
     var apps: [DiscoverApp]

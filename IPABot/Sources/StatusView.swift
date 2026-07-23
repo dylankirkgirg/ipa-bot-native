@@ -19,8 +19,16 @@ struct StatusView: View {
                         beatRow("Inject", status.services.inject)
                     }
                     Section("Queues") {
-                        LabeledContent("Decrypt", value: "\(status.queues.decrypt)")
-                        LabeledContent("Inject", value: "\(status.queues.inject)")
+                        NavigationLink {
+                            QueueDetailView(type: "decrypt")
+                        } label: {
+                            LabeledContent("Decrypt", value: "\(status.queues.decrypt)")
+                        }
+                        NavigationLink {
+                            QueueDetailView(type: "inject")
+                        } label: {
+                            LabeledContent("Inject", value: "\(status.queues.inject)")
+                        }
                     }
                     Section("Stats") {
                         LabeledContent("Signed apps", value: "\(status.signCount)")
