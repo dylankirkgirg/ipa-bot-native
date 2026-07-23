@@ -11,6 +11,12 @@ struct SettingsView: View {
     @State private var errorMessage: String?
     @State private var pickerTarget: CertPart?
     @State private var editingConnection = false
+    @State private var isBusyAdvanced = false
+    @State private var advancedNote: String?
+    @State private var exportTarget: ShareTarget?
+    @State private var restartingService: String?
+
+    private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
 
     private enum CertPart: Identifiable { case p12, profile
         var id: Int { self == .p12 ? 0 : 1 }
@@ -112,6 +118,44 @@ struct SettingsView: View {
                 } header: {
                     Label("Appearance", systemImage: "circle.lefthalf.filled")
                 }
+
+                if api.isConfigured {
+                    Section {
+                        Button {
+                            Task { await runBackup() }
+                        } label: {
+                            Label("Back Up Now", systemImage: "icloud.and.arrow.up")
+                        }.disabled(isBusyAdvanced)
+
+                        Button {
+                            Task { await runExport() }
+                        } label: {
+                            Label("Export State (.json)", systemImage: "square.and.arrow.up")
+                        }.disabled(isBusyAdvanced)
+
+                        ForEach(restartableServices, id: \.self) { service in
+                            Button {
+                                Task { await restart(service) }
+                            } label: {
+                                HStack {
+                                    Label("Restart \(service)", systemImage: "arrow.clockwise")
+                                    Spacer()
+                                    if restartingService == service {
+                                        ProgressView()
+                                    }
+                                }
+                            }.disabled(isBusyAdvanced)
+                        }
+
+                        if let advancedNote {
+                            Text(advancedNote).foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Label("Advanced", systemImage: "wrench.and.screwdriver")
+                    } footer: {
+                        Text("Backup/export mirror /backup and /export on Telegram. Restart bounces one on-box service (finder, relay, inject, bot API, or the A1 sniper).")
+                    }
+                }
             }
             .navigationTitle("Settings")
             .task { await loadCert() }
@@ -120,6 +164,9 @@ struct SettingsView: View {
                     pickerTarget = nil
                     Task { await upload(url: url, part: target) }
                 }
+            }
+            .sheet(item: $exportTarget) { target in
+                ShareSheet(items: [target.url])
             }
         }
     }
@@ -176,5 +223,38 @@ struct SettingsView: View {
             errorMessage = error.localizedDescription
         }
         isBusy = false
+    }
+
+    private func runBackup() async {
+        isBusyAdvanced = true; advancedNote = nil
+        do {
+            let result = try await api.backupNow()
+            advancedNote = result.ok ? "Backup delivered." : (result.error ?? "Backup failed.")
+        } catch {
+            advancedNote = error.localizedDescription
+        }
+        isBusyAdvanced = false
+    }
+
+    private func runExport() async {
+        isBusyAdvanced = true; advancedNote = nil
+        do {
+            exportTarget = ShareTarget(url: try await api.exportDump())
+        } catch {
+            advancedNote = error.localizedDescription
+        }
+        isBusyAdvanced = false
+    }
+
+    private func restart(_ service: String) async {
+        isBusyAdvanced = true; restartingService = service; advancedNote = nil
+        do {
+            let result = try await api.restartService(service)
+            advancedNote = result.ok ? "\(service) restarted." : (result.error ?? "Restart failed.")
+        } catch {
+            advancedNote = error.localizedDescription
+        }
+        isBusyAdvanced = false
+        restartingService = nil
     }
 }

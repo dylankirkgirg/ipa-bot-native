@@ -181,6 +181,10 @@ struct ActionResult: Codable {
     var error: String?
 }
 
+struct SearchHistoryResponse: Codable {
+    var history: [String]
+}
+
 struct ServiceBeat: Codable {
     var ageSec: Int
     var fresh: Bool
