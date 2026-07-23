@@ -13,6 +13,12 @@ struct LibraryView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var newWatchTerm = ""
+    @State private var activeSheet: AddSheetKind?
+
+    enum AddSheetKind: Identifiable {
+        case note, pin, alias, tfwatch, source
+        var id: Int { hashValue }
+    }
 
     var body: some View {
         NavigationStack {
@@ -139,9 +145,31 @@ struct LibraryView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Library")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button("Note", systemImage: "note.text") { activeSheet = .note }
+                        Button("Pin", systemImage: "pin.fill") { activeSheet = .pin }
+                        Button("Alias", systemImage: "at") { activeSheet = .alias }
+                        Button("TestFlight Watch", systemImage: "airplane") { activeSheet = .tfwatch }
+                        Button("Source", systemImage: "tray.2.fill") { activeSheet = .source }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
             .task { await load() }
             .refreshable { await load() }
             .overlay { if isLoading { ProgressView() } }
+            .sheet(item: $activeSheet) { kind in
+                switch kind {
+                case .note: AddNoteSheet(onSaved: { Task { await load() } })
+                case .pin: AddPinSheet(onSaved: { Task { await load() } })
+                case .alias: AddAliasSheet(onSaved: { Task { await load() } })
+                case .tfwatch: AddTfWatchSheet(onSaved: { Task { await load() } })
+                case .source: AddSourceSheet(onSaved: { Task { await load() } })
+                }
+            }
         }
     }
 
