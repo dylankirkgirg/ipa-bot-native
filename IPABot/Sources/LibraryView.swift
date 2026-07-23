@@ -14,6 +14,13 @@ struct LibraryView: View {
     @State private var errorMessage: String?
     @State private var newWatchTerm = ""
     @State private var activeSheet: AddSheetKind?
+    @State private var isRebuilding = false
+    @State private var bulkAlert: BulkAlert?
+
+    struct BulkAlert: Identifiable {
+        let id = UUID()
+        let message: String
+    }
 
     enum AddSheetKind: Identifiable {
         case note, pin, alias, tfwatch, source, preset
@@ -158,6 +165,14 @@ struct LibraryView: View {
                         Image(systemName: "plus")
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        Task { await rebuildAll() }
+                    } label: {
+                        if isRebuilding { ProgressView() } else { Image(systemName: "arrow.triangle.2.circlepath") }
+                    }
+                    .disabled(isRebuilding)
+                }
             }
             .task { await load() }
             .refreshable { await load() }
@@ -172,7 +187,25 @@ struct LibraryView: View {
                 case .preset: AddPresetSheet(onSaved: { Task { await load() } })
                 }
             }
+            .alert(item: $bulkAlert) { alert in
+                Alert(title: Text("Rebuild All"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            }
         }
+    }
+
+    private func rebuildAll() async {
+        isRebuilding = true
+        do {
+            let result = try await api.rebuildAll()
+            if result.ok {
+                bulkAlert = BulkAlert(message: "Queued \(result.queued ?? 0) of \(result.total ?? 0) remembered bundles.")
+            } else {
+                bulkAlert = BulkAlert(message: result.error ?? "Rebuild failed.")
+            }
+        } catch {
+            bulkAlert = BulkAlert(message: error.localizedDescription)
+        }
+        isRebuilding = false
     }
 
     @ViewBuilder

@@ -214,6 +214,14 @@ final class APIClient: ObservableObject {
         try await get("/api/about", query: ["bundle": bundle])
     }
 
+    func rebuildAll() async throws -> BulkActionResult {
+        try await post("/api/rebuildall", body: [:])
+    }
+
+    func resignAll() async throws -> BulkActionResult {
+        try await post("/api/resignall", body: [:])
+    }
+
     func backupNow() async throws -> SignResult {
         try await post("/api/backup-now", body: [:])
     }
