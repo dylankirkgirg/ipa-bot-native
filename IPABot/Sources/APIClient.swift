@@ -178,10 +178,12 @@ final class APIClient: ObservableObject {
         try await get("/api/inject-result", query: ["id": id])
     }
 
-    func sign(ipaUrl: String, ipaName: String, options: SignOptions) async throws -> SignResult {
+    func sign(ipaUrl: String, ipaName: String, options: SignOptions, vaultMsgId: Int? = nil) async throws -> SignResult {
         let optData = try JSONEncoder().encode(options)
         let optDict = try JSONSerialization.jsonObject(with: optData) as? [String: Any] ?? [:]
-        return try await post("/api/sign", body: ["ipa_url": ipaUrl, "ipa_name": ipaName, "options": optDict])
+        var body: [String: Any] = ["ipa_url": ipaUrl, "ipa_name": ipaName, "options": optDict]
+        if let vaultMsgId { body["vault_msg_id"] = vaultMsgId }
+        return try await post("/api/sign", body: body)
     }
 
     func certs() async throws -> CertsResponse {

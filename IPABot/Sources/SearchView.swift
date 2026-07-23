@@ -150,16 +150,20 @@ struct SearchView: View {
             hit: hit,
             onStar: { Task { await toggleStar(hit) } },
             onDownload: downloadAction(for: hit),
-            onSign: hit.download_url.isEmpty ? nil : { Task { await signDirect(hit) } },
-            onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
+            onSign: canDeliver(hit) ? { Task { await signDirect(hit) } } : nil,
+            onInject: canDeliver(hit) ? { injectTarget = hit } : nil
         )
+    }
+
+    private func canDeliver(_ hit: Hit) -> Bool {
+        !hit.download_url.isEmpty || hit.vault_msg_id != nil
     }
 
     private func signDirect(_ hit: Hit) async {
         guard signingBundleId == nil else { return }
         signingBundleId = hit.bundle_id
         do {
-            let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions())
+            let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions(), vaultMsgId: hit.vault_msg_id)
             signAlert = SignAlert(message: result.ok ? (result.note ?? "Signing queued — check Library › Signed shortly.") : (result.error ?? "Sign request failed."))
         } catch {
             signAlert = SignAlert(message: error.localizedDescription)
