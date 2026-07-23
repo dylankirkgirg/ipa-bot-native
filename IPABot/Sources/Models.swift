@@ -319,4 +319,5 @@ struct StatusResponse: Codable {
     var vaultEntries: Int
     var build: String
     var autosign: Bool?
+    var iosVersion: String?
 }

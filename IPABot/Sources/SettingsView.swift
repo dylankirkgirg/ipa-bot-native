@@ -17,6 +17,9 @@ struct SettingsView: View {
     @State private var restartingService: String?
     @State private var autosignOn = false
     @State private var isTogglingAutosign = false
+    @State private var iosVersion = ""
+    @State private var iosNote: String?
+    @State private var isSavingIos = false
 
     private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
 
@@ -182,6 +185,24 @@ struct SettingsView: View {
             }
             .padding(.vertical, 9)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
+            HStack {
+                Text("Your iOS version").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                Spacer()
+                TextField("18.5", text: $iosVersion)
+                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                    .font(Ledger.mono(13)).frame(width: 70)
+                Button("Save") { Task { await saveIosVersion() } }
+                    .buttonStyle(LedgerOutlineButtonStyle())
+                    .disabled(isSavingIos || iosVersion.isEmpty)
+            }
+            .padding(.vertical, 9)
+            if let iosNote {
+                Text(iosNote).font(Ledger.body(11)).foregroundColor(Ledger.textTertiary)
+            } else {
+                Text("Used to pick the right build variant for your device during search.")
+                    .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary)
+            }
         }
         .padding(.horizontal, 20).padding(.bottom, 12)
     }
@@ -229,7 +250,18 @@ struct SettingsView: View {
 
     private func loadCert() async {
         do { cert = try await api.certs().certs.first } catch {}
-        autosignOn = (try? await api.status())?.autosign ?? false
+        let status = try? await api.status()
+        autosignOn = status?.autosign ?? false
+        iosVersion = status?.iosVersion ?? ""
+    }
+
+    private func saveIosVersion() async {
+        isSavingIos = true; iosNote = nil
+        do {
+            let result = try await api.setIosVersion(iosVersion)
+            iosNote = result.ok ? "Saved." : (result.error ?? "Couldn't save.")
+        } catch { iosNote = error.localizedDescription }
+        isSavingIos = false
     }
 
     private func toggleAutosign(_ on: Bool) async {

@@ -242,6 +242,10 @@ final class APIClient: ObservableObject {
         try await post("/api/autosign", body: ["on": on])
     }
 
+    func setIosVersion(_ version: String) async throws -> ActionResult {
+        try await post("/api/ios-set", body: ["version": version])
+    }
+
     func diff(query: String) async throws -> DiffResponse {
         try await get("/api/diff", query: ["q": query])
     }
