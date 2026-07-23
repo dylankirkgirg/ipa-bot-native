@@ -6,6 +6,13 @@ struct SignedView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var installTarget: DownloadTarget?
+    @State private var isResigning = false
+    @State private var resignAlert: ResignAlert?
+
+    struct ResignAlert: Identifiable {
+        let id = UUID()
+        let message: String
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,6 +36,19 @@ struct SignedView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Signed")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task { await resignAll() }
+                    } label: {
+                        if isResigning { ProgressView() } else { Image(systemName: "arrow.triangle.2.circlepath") }
+                    }
+                    .disabled(isResigning || signed.isEmpty)
+                }
+            }
+            .alert(item: $resignAlert) { alert in
+                Alert(title: Text("Re-sign All"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            }
             .task { await load() }
             .refreshable { await load() }
             .overlay {
@@ -57,5 +77,18 @@ struct SignedView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    private func resignAll() async {
+        isResigning = true
+        do {
+            let result = try await api.resignAll()
+            resignAlert = ResignAlert(message: result.ok
+                ? "Queued \(result.queued ?? 0) of \(result.total ?? 0) re-signs."
+                : (result.error ?? "Re-sign failed."))
+        } catch {
+            resignAlert = ResignAlert(message: error.localizedDescription)
+        }
+        isResigning = false
     }
 }

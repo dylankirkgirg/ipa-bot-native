@@ -185,6 +185,14 @@ struct SearchHistoryResponse: Codable {
     var history: [String]
 }
 
+struct BulkActionResult: Codable {
+    var ok: Bool
+    var queued: Int?
+    var skipped: Int?
+    var total: Int?
+    var error: String?
+}
+
 struct AboutInfo: Codable {
     var app_name: String
     var bundle_id: String
