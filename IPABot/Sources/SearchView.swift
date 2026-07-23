@@ -27,6 +27,22 @@ struct SearchView: View {
         NavigationStack {
             List {
                 header
+                searchField
+                if query.isEmpty && !history.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(history, id: \.self) { term in
+                                Button(term) { query = term; Task { await runSearch() } }
+                                    .font(Ledger.mono(12))
+                                    .foregroundColor(Ledger.textSecondary)
+                                    .padding(.horizontal, 10).padding(.vertical, 6)
+                                    .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+                            }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 6, trailing: 20))
+                    .listRowSeparator(.hidden).listRowBackground(Color.clear)
+                }
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(Ledger.accent)
                         .listRowSeparator(.hidden).listRowBackground(Color.clear)
@@ -61,13 +77,6 @@ struct SearchView: View {
             .listStyle(.plain)
             .ledgerBackground()
             .navigationBarHidden(true)
-            .searchable(text: $query, prompt: "App name or bundle ID")
-            .searchSuggestions {
-                ForEach(history, id: \.self) { term in
-                    Text(term).searchCompletion(term)
-                }
-            }
-            .onSubmit(of: .search) { Task { await runSearch() } }
             .overlay {
                 if isLoading { ProgressView() }
                 else if hits.isEmpty && query.isEmpty && errorMessage == nil {
@@ -109,6 +118,28 @@ struct SearchView: View {
         }
         .padding(.top, 8).padding(.bottom, 6)
         .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Glyph(.search, size: 16, color: Ledger.textSecondary)
+            TextField("App name or bundle ID", text: $query)
+                .font(Ledger.body(15))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .onSubmit { Task { await runSearch() } }
+            if !query.isEmpty {
+                Button { query = ""; Task { await loadRecent() } } label: {
+                    Glyph(.xmark, size: 14, color: Ledger.textSecondary)
+                }
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 8, trailing: 20))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }

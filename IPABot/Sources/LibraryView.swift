@@ -63,7 +63,6 @@ struct LibraryView: View {
             .ledgerBackground()
             .navigationBarHidden(true)
             .task { await load() }
-            .refreshable { await load() }
             .overlay { if isLoading { ProgressView() } }
             .sheet(item: $activeSheet) { kind in
                 switch kind {
@@ -160,6 +159,7 @@ struct LibraryView: View {
         }
         .listStyle(.plain)
         .ledgerBackground()
+        .refreshable { await load() }
     }
 
     private func emptyRow(_ text: String) -> some View {
