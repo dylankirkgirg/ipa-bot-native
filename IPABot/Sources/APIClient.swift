@@ -22,14 +22,20 @@ final class APIClient: ObservableObject {
         didSet { UserDefaults.standard.set(baseURL, forKey: "ipabot.baseURL") }
     }
     @Published var secret: String {
-        didSet { UserDefaults.standard.set(secret, forKey: "ipabot.secret") }
+        didSet { Keychain.set(secret, for: "ipabot.secret") }
     }
 
-    var isConfigured: Bool { !baseURL.isEmpty && !secret.isEmpty }
+    var isConfigured: Bool {
+        !baseURL.isEmpty && !secret.isEmpty && baseURL.lowercased().hasPrefix("https://")
+    }
 
     private init() {
         baseURL = UserDefaults.standard.string(forKey: "ipabot.baseURL") ?? "https://ipa-bot.dihblud1.workers.dev"
-        secret = UserDefaults.standard.string(forKey: "ipabot.secret") ?? ""
+        if let migrated = UserDefaults.standard.string(forKey: "ipabot.secret") {
+            Keychain.set(migrated, for: "ipabot.secret")
+            UserDefaults.standard.removeObject(forKey: "ipabot.secret")
+        }
+        secret = Keychain.get("ipabot.secret") ?? ""
     }
 
     private func get<T: Decodable>(_ path: String, query: [String: String] = [:]) async throws -> T {
