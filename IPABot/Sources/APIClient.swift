@@ -260,6 +260,10 @@ final class APIClient: ObservableObject {
         try await get("/api/trending")
     }
 
+    func sniper() async throws -> SniperResponse {
+        try await get("/api/sniper")
+    }
+
     func queue(type: String) async throws -> QueueResponse {
         try await get("/api/queue", query: ["type": type])
     }

@@ -8,6 +8,7 @@ struct SignedView: View {
     @State private var installTarget: DownloadTarget?
     @State private var isResigning = false
     @State private var resignAlert: ResignAlert?
+    @State private var showSignInstall = false
 
     struct ResignAlert: Identifiable {
         let id = UUID()
@@ -34,9 +35,15 @@ struct SignedView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
+            .webBackground()
             .navigationTitle("Signed")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { showSignInstall = true } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Task { await resignAll() }
@@ -45,6 +52,9 @@ struct SignedView: View {
                     }
                     .disabled(isResigning || signed.isEmpty)
                 }
+            }
+            .sheet(isPresented: $showSignInstall) {
+                SignInstallView()
             }
             .alert(item: $resignAlert) { alert in
                 Alert(title: Text("Re-sign All"), message: Text(alert.message), dismissButton: .default(Text("OK")))

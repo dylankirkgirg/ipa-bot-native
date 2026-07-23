@@ -217,6 +217,19 @@ struct ChangelogVersion: Codable, Identifiable {
     var id: String { version }
 }
 
+struct SniperResponse: Codable {
+    var heartbeat: SniperHeartbeat?
+}
+
+struct SniperHeartbeat: Codable {
+    var status: String
+    var ageSec: Int
+    var fresh: Bool
+    var attempts: Int
+    var throttles: Int
+    var capacityDenials: Int
+}
+
 struct TrendingResponse: Codable {
     var trending: [TrendingEntry]
 }
