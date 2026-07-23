@@ -36,13 +36,17 @@ struct SearchView: View {
                 }
                 Section {
                     ForEach(hits) { hit in
-                        HitRow(
-                            hit: hit,
-                            onStar: { Task { await toggleStar(hit) } },
-                            onDownload: downloadAction(for: hit),
-                            onSign: hit.download_url.isEmpty ? nil : { Task { await signDirect(hit) } },
-                            onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
-                        )
+                        Group {
+                            if hit.bundle_id.isEmpty {
+                                row(for: hit)
+                            } else {
+                                NavigationLink {
+                                    AboutView(bundleId: hit.bundle_id, fallbackName: hit.app_name)
+                                } label: {
+                                    row(for: hit)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -89,6 +93,17 @@ struct SearchView: View {
                 Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
             }
         }
+    }
+
+    @ViewBuilder
+    private func row(for hit: Hit) -> some View {
+        HitRow(
+            hit: hit,
+            onStar: { Task { await toggleStar(hit) } },
+            onDownload: downloadAction(for: hit),
+            onSign: hit.download_url.isEmpty ? nil : { Task { await signDirect(hit) } },
+            onInject: hit.download_url.isEmpty ? nil : { injectTarget = hit }
+        )
     }
 
     private func signDirect(_ hit: Hit) async {
