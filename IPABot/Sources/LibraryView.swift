@@ -139,9 +139,9 @@ struct LibraryView: View {
                     Section {
                         ForEach(tfWatches) { t in
                             HStack {
-                                Text(t.name ?? t.url)
+                                Text(t.name.isEmpty ? t.url : t.name)
                                 Spacer()
-                                if let status = t.status { Text(status).font(.caption).foregroundStyle(.secondary) }
+                                Text(t.status).font(.caption).foregroundStyle(.secondary)
                             }
                         }
                         .onDelete { indexSet in

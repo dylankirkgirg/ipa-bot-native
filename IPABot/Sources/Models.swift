@@ -80,10 +80,11 @@ struct AliasEntry: Codable, Identifiable {
 }
 
 struct TfWatchEntry: Codable, Identifiable {
-    var id: String
-    var name: String?
     var url: String
-    var status: String?
+    var name: String
+    var status: String
+    var checked_at: String?
+    var id: String { url }
 }
 
 struct LibraryResponse: Codable {
