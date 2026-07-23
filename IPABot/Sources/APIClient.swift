@@ -210,6 +210,10 @@ final class APIClient: ObservableObject {
         try await get("/api/search-history")
     }
 
+    func about(bundle: String) async throws -> AboutInfo {
+        try await get("/api/about", query: ["bundle": bundle])
+    }
+
     func backupNow() async throws -> SignResult {
         try await post("/api/backup-now", body: [:])
     }

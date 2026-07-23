@@ -185,6 +185,31 @@ struct SearchHistoryResponse: Codable {
     var history: [String]
 }
 
+struct AboutInfo: Codable {
+    var app_name: String
+    var bundle_id: String
+    var genre: String?
+    var artist_name: String?
+    var artwork_url: String?
+    var rating: Double?
+    var rating_count: Int?
+    var latest_version: String?
+    var latest_date: String?
+    var source_count: Int
+    var vault_count: Int
+    var starred: Bool
+    var pinned_version: String?
+    var auto_tweaks: [String]
+    var note: String?
+    var last_signed: LastSigned?
+    var discoverable: Bool
+
+    struct LastSigned: Codable {
+        var version: String
+        var ts: Double
+    }
+}
+
 struct ServiceBeat: Codable {
     var ageSec: Int
     var fresh: Bool
