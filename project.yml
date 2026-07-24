@@ -30,6 +30,11 @@ targets:
           - CFBundleURLSchemes: [ipabot]
             CFBundleURLName: com.dylankirkgirg.ipabot.native
         NSSupportsLiveActivities: true
+    entitlements:
+      path: Generated/IPABot.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dylankirkgirg.ipabot
     dependencies:
       - target: IPABotShare
         embed: true
@@ -68,6 +73,7 @@ targets:
     sources:
       - Widgets
       - path: IPABot/Sources/InjectActivityAttributes.swift
+      - path: IPABot/Sources/SharedConfig.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dylankirkgirg.ipabot.native.widgets
@@ -82,3 +88,8 @@ targets:
       properties:
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Generated/IPABotWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.dylankirkgirg.ipabot

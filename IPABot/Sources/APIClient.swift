@@ -39,10 +39,16 @@ final class APIClient: ObservableObject {
     static let shared = APIClient()
 
     @Published var baseURL: String {
-        didSet { UserDefaults.standard.set(baseURL, forKey: "ipabot.baseURL") }
+        didSet {
+            UserDefaults.standard.set(baseURL, forKey: "ipabot.baseURL")
+            SharedConfig.write(baseURL: baseURL, secret: secret)
+        }
     }
     @Published var secret: String {
-        didSet { Keychain.set(secret, for: "ipabot.secret") }
+        didSet {
+            Keychain.set(secret, for: "ipabot.secret")
+            SharedConfig.write(baseURL: baseURL, secret: secret)
+        }
     }
     @Published var theme: AppTheme {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: "ipabot.theme") }
@@ -60,6 +66,7 @@ final class APIClient: ObservableObject {
         }
         secret = Keychain.get("ipabot.secret") ?? ""
         theme = AppTheme(rawValue: UserDefaults.standard.string(forKey: "ipabot.theme") ?? "") ?? .system
+        SharedConfig.write(baseURL: baseURL, secret: secret)
     }
 
     private func get<T: Decodable>(_ path: String, query: [String: String] = [:]) async throws -> T {

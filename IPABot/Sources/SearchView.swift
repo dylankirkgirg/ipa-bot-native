@@ -20,6 +20,10 @@ struct SearchView: View {
     @State private var signAlert: SignAlert?
     @State private var history: [String] = []
     @State private var textJob: TextJobTarget?
+    @State private var selectMode = false
+    @State private var selected: Set<String> = []
+    @State private var isBulkSigning = false
+    @State private var bulkAlert: SignAlert?
 
     struct TextJobTarget: Identifiable {
         let id: String
@@ -66,7 +70,17 @@ struct SearchView: View {
                 }
                 ForEach(hits) { hit in
                     Group {
-                        if hit.bundle_id.isEmpty {
+                        if selectMode {
+                            Button { toggleSelect(hit) } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: selected.contains(hit.id) ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(selected.contains(hit.id) ? Ledger.accent : Ledger.textTertiary)
+                                        .font(.system(size: 20))
+                                    row(for: hit, interactive: false)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        } else if hit.bundle_id.isEmpty {
                             row(for: hit)
                         } else {
                             NavigationLink {
@@ -92,6 +106,11 @@ struct SearchView: View {
                         .font(Ledger.body(14)).foregroundColor(Ledger.textTertiary)
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                if selectMode && !selected.isEmpty {
+                    bulkBar
+                }
+            }
             .task { await loadRecent(); await loadHistory() }
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
             .sheet(item: $downloadTarget) { target in SafariView(url: target.url) }
@@ -108,6 +127,9 @@ struct SearchView: View {
             .alert(item: $signAlert) { alert in
                 Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
             }
+            .alert(item: $bulkAlert) { alert in
+                Alert(title: Text("Bulk Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            }
         }
     }
 
@@ -118,6 +140,11 @@ struct SearchView: View {
             Button { Task { if query.isEmpty { await loadRecent() } else { await runSearch() } } } label: {
                 Glyph(.refresh, size: 18, color: Ledger.textSecondary)
             }
+            Button(selectMode ? "Done" : "Select") {
+                selectMode.toggle()
+                if !selectMode { selected.removeAll() }
+            }
+            .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
             Menu {
                 Button("Sign a file") { showSign = true }
                 Button("Decrypt") { showDecrypt = true }
@@ -158,20 +185,58 @@ struct SearchView: View {
     }
 
     @ViewBuilder
-    private func row(for hit: Hit) -> some View {
+    private func row(for hit: Hit, interactive: Bool = true) -> some View {
         HitRow(
             hit: hit,
-            onStar: { Task { await toggleStar(hit) } },
-            onDownload: downloadAction(for: hit),
-            onSign: canDeliver(hit) ? { Task { await signDirect(hit) } } : nil,
-            onInject: canDeliver(hit) ? { injectTarget = hit } : nil
+            onStar: interactive ? { Task { await toggleStar(hit) } } : nil,
+            onDownload: interactive ? downloadAction(for: hit) : nil,
+            onSign: interactive && canDeliver(hit) ? { Task { await signDirect(hit) } } : nil,
+            onInject: interactive && canDeliver(hit) ? { injectTarget = hit } : nil
         )
         .contextMenu {
-            if canDeliver(hit) {
+            if interactive && canDeliver(hit) {
                 Button { Task { await queueInspect(hit) } } label: { Label("Inspect", systemImage: "wrench.and.screwdriver") }
                 Button { Task { await queueEntitlements(hit) } } label: { Label("Entitlements", systemImage: "lock.shield") }
             }
         }
+    }
+
+    private func toggleSelect(_ hit: Hit) {
+        if selected.contains(hit.id) { selected.remove(hit.id) } else { selected.insert(hit.id) }
+    }
+
+    private var bulkBar: some View {
+        HStack {
+            Text("\(selected.count) selected").font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
+            Spacer()
+            Button(isBulkSigning ? "Signing…" : "Sign All") { Task { await bulkSign() } }
+                .buttonStyle(LedgerPrimaryButtonStyle())
+                .disabled(isBulkSigning || !selected.contains(where: { id in hits.first(where: { $0.id == id }).map(canDeliver) ?? false }))
+        }
+        .padding(.horizontal, 20).padding(.vertical, 10)
+        .background(Ledger.surface)
+        .overlay(alignment: .top) { Rectangle().fill(Ledger.divider).frame(height: 1) }
+    }
+
+    private func bulkSign() async {
+        let targets = hits.filter { selected.contains($0.id) && canDeliver($0) }
+        guard !targets.isEmpty else { return }
+        isBulkSigning = true
+        var okCount = 0
+        var failures: [String] = []
+        for hit in targets {
+            do {
+                let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions(), vaultMsgId: hit.vault_msg_id)
+                if result.ok { okCount += 1 } else { failures.append("\(hit.app_name): \(result.error ?? "failed")") }
+            } catch {
+                failures.append("\(hit.app_name): \(error.localizedDescription)")
+            }
+        }
+        isBulkSigning = false
+        selected.removeAll()
+        selectMode = false
+        let summary = "Queued \(okCount) of \(targets.count)." + (failures.isEmpty ? "" : "\n\n" + failures.joined(separator: "\n"))
+        bulkAlert = SignAlert(message: summary)
     }
 
     private func canDeliver(_ hit: Hit) -> Bool {

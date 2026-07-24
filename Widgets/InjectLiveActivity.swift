@@ -51,5 +51,6 @@ struct InjectLiveActivity: Widget {
 struct IPABotWidgetsBundle: WidgetBundle {
     var body: some Widget {
         InjectLiveActivity()
+        StatusWidget()
     }
 }

@@ -78,6 +78,9 @@ struct DecryptView: View {
         if #available(iOS 16.2, *) {
             activityBox = LiveActivityManager.start(jobId: id, appName: urlText, kind: "decrypt")
         }
+        let bgGuard = BackgroundTaskGuard()
+        bgGuard.begin()
+        defer { bgGuard.end() }
         for _ in 0..<90 {
             if Task.isCancelled { return }
             do {
