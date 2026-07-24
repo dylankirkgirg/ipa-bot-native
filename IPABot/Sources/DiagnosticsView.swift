@@ -106,7 +106,9 @@ struct DiagnosticsView: View {
     private func load() async {
         isLoading = true; errorMessage = nil
         do {
-            status = try await api.status()
+            let s = try await api.status()
+            status = s
+            BadgeUpdater.set(s.queues.decrypt + s.queues.inject)
         } catch {
             errorMessage = error.localizedDescription
         }

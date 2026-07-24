@@ -6,6 +6,7 @@ struct IPABotApp: App {
 
     init() {
         Ledger.configureAppearance()
+        BadgeUpdater.requestAuthorization()
     }
 
     var body: some Scene {
