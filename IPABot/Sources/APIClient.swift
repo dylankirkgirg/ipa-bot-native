@@ -286,6 +286,10 @@ final class APIClient: ObservableObject {
         try await post("/api/decrypt-bot-set", body: ["handle": handle])
     }
 
+    func nukeAllState() async throws -> NukeResult {
+        try await post("/api/nuke", body: ["confirm": true])
+    }
+
     func diff(query: String) async throws -> DiffResponse {
         try await get("/api/diff", query: ["q": query])
     }

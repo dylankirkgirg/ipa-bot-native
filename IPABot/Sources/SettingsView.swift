@@ -22,6 +22,14 @@ struct SettingsView: View {
     @State private var isSavingIos = false
     @State private var decryptBot = ""
     @State private var isSavingDecryptBot = false
+    @State private var showNukeConfirm = false
+    @State private var isNuking = false
+    @State private var nukeResultAlert: NukeAlert?
+
+    struct NukeAlert: Identifiable {
+        let id = UUID()
+        let message: String
+    }
 
     private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
 
@@ -53,12 +61,24 @@ struct SettingsView: View {
                     if api.isConfigured {
                         LedgerSectionLabel(text: "Advanced")
                         advancedSection
+
+                        LedgerSectionLabel(text: "Danger Zone")
+                        dangerZoneSection
                     }
                 }
             }
             .ledgerBackground()
             .navigationBarHidden(true)
             .task { await loadCert() }
+            .confirmationDialog(
+                "Wipe ALL personal state? Stars, watches, custom tweaks/sources, presets, notes, pins, aliases, TF watches, and prefs — permanently, cannot be undone.",
+                isPresented: $showNukeConfirm, titleVisibility: .visible
+            ) {
+                Button("Wipe everything", role: .destructive) { Task { await runNuke() } }
+            }
+            .alert(item: $nukeResultAlert) { alert in
+                Alert(title: Text("Nuke"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            }
             .sheet(item: $pickerTarget) { target in
                 DocumentPicker { url in
                     pickerTarget = nil
@@ -270,6 +290,31 @@ struct SettingsView: View {
                 .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary).padding(.top, 8)
         }
         .padding(.horizontal, 20).padding(.bottom, 24)
+    }
+
+    private var dangerZoneSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button { showNukeConfirm = true } label: {
+                HStack {
+                    if isNuking { ProgressView() } else { Image(systemName: "trash.fill").foregroundColor(Ledger.accent) }
+                    Text("Wipe all state").font(Ledger.body(14)).foregroundColor(Ledger.accent)
+                }
+            }
+            .disabled(isNuking)
+            .padding(.vertical, 9)
+            Text("Permanently deletes stars, watches, custom tweaks/sources, presets, notes, pins, aliases, TF watches, and prefs. Cannot be undone.")
+                .font(Ledger.body(11)).foregroundColor(Ledger.textTertiary)
+        }
+        .padding(.horizontal, 20).padding(.bottom, 24)
+    }
+
+    private func runNuke() async {
+        isNuking = true
+        do {
+            let result = try await api.nukeAllState()
+            nukeResultAlert = NukeAlert(message: result.ok ? "Nuked: \(result.summary ?? "done")" : (result.error ?? "Nuke failed."))
+        } catch { nukeResultAlert = NukeAlert(message: error.localizedDescription) }
+        isNuking = false
     }
 
     private var hostLabel: String { URL(string: api.baseURL)?.host ?? api.baseURL }

@@ -262,6 +262,12 @@ struct DecryptBotResponse: Codable {
     var bot: String
 }
 
+struct NukeResult: Codable {
+    var ok: Bool
+    var summary: String?
+    var error: String?
+}
+
 struct ForkEntry: Codable, Identifiable {
     var repo: String
     var stars: Int
