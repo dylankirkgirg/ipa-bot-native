@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SearchView: View {
     @EnvironmentObject var api: APIClient
@@ -238,6 +239,12 @@ struct SearchView: View {
             if interactive && canDeliver(hit) {
                 Button { Task { await queueInspect(hit) } } label: { Label("Inspect", systemImage: "wrench.and.screwdriver") }
                 Button { Task { await queueEntitlements(hit) } } label: { Label("Entitlements", systemImage: "lock.shield") }
+            }
+            if interactive && !hit.bundle_id.isEmpty {
+                Button { UIPasteboard.general.string = hit.bundle_id } label: { Label("Copy bundle ID", systemImage: "doc.on.doc") }
+            }
+            if interactive && !hit.download_url.isEmpty {
+                Button { UIPasteboard.general.string = hit.download_url } label: { Label("Copy download URL", systemImage: "link") }
             }
         }
     }
