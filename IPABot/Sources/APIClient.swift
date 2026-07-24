@@ -250,6 +250,10 @@ final class APIClient: ObservableObject {
         try await get("/api/search-history")
     }
 
+    func clearHistory() async throws {
+        try await post("/api/clearhistory", body: [:])
+    }
+
     func about(bundle: String) async throws -> AboutInfo {
         try await get("/api/about", query: ["bundle": bundle])
     }

@@ -65,6 +65,11 @@ struct SearchView: View {
                                     .padding(.horizontal, 10).padding(.vertical, 6)
                                     .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
                             }
+                            Button { Task { await clearHistory() } } label: {
+                                Image(systemName: "trash").font(.system(size: 12))
+                            }
+                            .foregroundColor(Ledger.textTertiary)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
                         }
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 6, trailing: 20))
@@ -331,6 +336,11 @@ struct SearchView: View {
 
     private func loadHistory() async {
         history = (try? await api.searchHistory().history) ?? []
+    }
+
+    private func clearHistory() async {
+        try? await api.clearHistory()
+        history = []
     }
 
     private func runRandom() async {
