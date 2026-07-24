@@ -154,7 +154,11 @@ struct SignInstallView: View {
 
     private func uploadPicked(url: URL) async {
         isUploading = true; errorMessage = nil
-        guard url.startAccessingSecurityScopedResource() else { errorMessage = "Couldn't access the picked file."; isUploading = false; return }
+        // DocumentPicker always opens with asCopy:true — the URL is already a
+        // temp copy inside this app's sandbox, so no security scope is needed
+        // to read it. start/stop is still correct to call (harmless if it was
+        // never granted) but its return value isn't a real failure signal here.
+        _ = url.startAccessingSecurityScopedResource()
         defer { url.stopAccessingSecurityScopedResource() }
         do {
             let data = try Data(contentsOf: url)

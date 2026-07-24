@@ -69,6 +69,7 @@ struct SettingsView: View {
             }
             .ledgerBackground()
             .navigationBarHidden(true)
+            .scrollDismissesKeyboard(.interactively)
             .task { await loadCert() }
             .confirmationDialog(
                 "Wipe ALL personal state? Stars, watches, custom tweaks/sources, presets, notes, pins, aliases, TF watches, and prefs — permanently, cannot be undone.",
@@ -212,7 +213,13 @@ struct SettingsView: View {
                 Text("Your iOS version").font(Ledger.body(14)).foregroundColor(Ledger.text)
                 Spacer()
                 TextField("18.5", text: $iosVersion)
-                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                    // .decimalPad has no Return key (can't dismiss it) and its
+                    // "." is locale-dependent (some locales show "," instead) —
+                    // .numbersAndPunctuation keeps a real "." plus a Return key.
+                    .keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .submitLabel(.done)
+                    .onSubmit { hideKeyboard() }
                     .font(Ledger.mono(13)).frame(width: 70)
                 Button("Save") { Task { await saveIosVersion() } }
                     .buttonStyle(LedgerOutlineButtonStyle())
@@ -275,6 +282,8 @@ struct SettingsView: View {
                 TextField("@SomeBot", text: $decryptBot)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                     .multilineTextAlignment(.trailing)
+                    .submitLabel(.done)
+                    .onSubmit { hideKeyboard() }
                     .font(Ledger.mono(12)).frame(width: 120)
                 Button("Save") { Task { await saveDecryptBot() } }
                     .buttonStyle(LedgerOutlineButtonStyle())
@@ -357,7 +366,10 @@ struct SettingsView: View {
     private func upload(url: URL, part: CertPart) async {
         isBusy = true; errorMessage = nil; statusNote = nil
         defer { isBusy = false }
-        guard url.startAccessingSecurityScopedResource() else { errorMessage = "Couldn't access the picked file."; return }
+        // Same as SignInstallView.uploadPicked -- DocumentPicker's asCopy:true
+        // URL doesn't need a security scope, so the return value here isn't a
+        // real failure signal.
+        _ = url.startAccessingSecurityScopedResource()
         defer { url.stopAccessingSecurityScopedResource() }
         do {
             let data = try Data(contentsOf: url)

@@ -120,6 +120,7 @@ struct SearchView: View {
             .listStyle(.plain)
             .ledgerBackground()
             .navigationBarHidden(true)
+            .scrollDismissesKeyboard(.interactively)
             .overlay {
                 if isLoading { ProgressView() }
                 else if hits.isEmpty && query.isEmpty && errorMessage == nil {
@@ -158,33 +159,45 @@ struct SearchView: View {
         HStack(alignment: .firstTextBaseline) {
             Text("Search").font(Ledger.heading(28))
             Spacer()
-            Button { Task { if query.isEmpty { await loadRecent() } else { await runSearch() } } } label: {
-                Glyph(.refresh, size: 18, color: Ledger.textSecondary)
-            }
-            Button(selectMode ? "Done" : "Select") {
-                selectMode.toggle()
-                if !selectMode { selected.removeAll() }
-            }
-            .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
-            Menu {
-                Picker("Sort", selection: $sortOption) {
-                    ForEach(SortOption.allCases) { opt in Text(opt.title).tag(opt) }
+            HStack(spacing: 20) {
+                Button { Task { if query.isEmpty { await loadRecent() } else { await runSearch() } } } label: {
+                    Image(systemName: "arrow.clockwise").font(.system(size: 17)).foregroundColor(Ledger.textSecondary)
                 }
-                Toggle("Modded only", isOn: $moddedOnly)
-            } label: {
-                Image(systemName: "arrow.up.arrow.down.circle")
-                    .font(.system(size: 18))
-                    .foregroundColor((sortOption != .relevance || moddedOnly) ? Ledger.accent : Ledger.textSecondary)
-            }
-            Menu {
-                Button("Sign a file") { showSign = true }
-                Button("Decrypt") { showDecrypt = true }
-                Button("Diff") { showDiff = true }
-                Button("Trending") { showTrending = true }
-                Button("Channels") { showChannels = true }
-                Button("Random") { Task { await runRandom() } }
-            } label: {
-                Glyph(.plus, size: 18, color: Ledger.textSecondary)
+                .frame(width: 32, height: 32).contentShape(Rectangle())
+
+                Button(selectMode ? "Done" : "Select") {
+                    selectMode.toggle()
+                    if !selectMode { selected.removeAll() }
+                }
+                .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
+
+                Menu {
+                    Picker("Sort", selection: $sortOption) {
+                        ForEach(SortOption.allCases) { opt in Text(opt.title).tag(opt) }
+                    }
+                    Toggle("Modded only", isOn: $moddedOnly)
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down.circle")
+                        .font(.system(size: 18))
+                        .foregroundColor((sortOption != .relevance || moddedOnly) ? Ledger.accent : Ledger.textSecondary)
+                }
+                .frame(width: 32, height: 32).contentShape(Rectangle())
+
+                // "..." reads unambiguously as "more actions" — a bare "+" was
+                // easy to miss as the way to reach Decrypt/Diff/etc.
+                Menu {
+                    Button("Sign a file") { showSign = true }
+                    Button("Decrypt") { showDecrypt = true }
+                    Button("Diff") { showDiff = true }
+                    Button("Trending") { showTrending = true }
+                    Button("Channels") { showChannels = true }
+                    Button("Random") { Task { await runRandom() } }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 18))
+                        .foregroundColor(Ledger.textSecondary)
+                }
+                .frame(width: 32, height: 32).contentShape(Rectangle())
             }
         }
         .padding(.top, 8).padding(.bottom, 6)
@@ -201,7 +214,7 @@ struct SearchView: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
-                .onSubmit { Task { await runSearch() } }
+                .onSubmit { hideKeyboard(); Task { await runSearch() } }
             if !query.isEmpty {
                 Button { query = ""; Task { await loadRecent() } } label: {
                     Glyph(.xmark, size: 14, color: Ledger.textSecondary)
