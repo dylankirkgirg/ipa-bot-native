@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DiscoverView: View {
     @EnvironmentObject var api: APIClient
@@ -30,6 +31,14 @@ struct DiscoverView: View {
                             onDownload: downloadAction(for: hit),
                             onInject: canDeliver(hit) ? { injectTarget = hit } : nil
                         )
+                        .contextMenu {
+                            if !hit.bundle_id.isEmpty {
+                                Button { UIPasteboard.general.string = hit.bundle_id } label: { Label("Copy bundle ID", systemImage: "doc.on.doc") }
+                            }
+                            if !hit.download_url.isEmpty {
+                                Button { UIPasteboard.general.string = hit.download_url } label: { Label("Copy download URL", systemImage: "link") }
+                            }
+                        }
                     } else {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(app.app_name).font(.subheadline)

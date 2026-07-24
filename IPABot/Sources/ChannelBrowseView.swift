@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ChannelBrowseView: View {
     @EnvironmentObject var api: APIClient
@@ -42,6 +43,14 @@ struct ChannelBrowseView: View {
                 }
                 ForEach(hits) { hit in
                     HitRow(hit: hit, onDownload: downloadAction(for: hit))
+                        .contextMenu {
+                            if !hit.bundle_id.isEmpty {
+                                Button { UIPasteboard.general.string = hit.bundle_id } label: { Label("Copy bundle ID", systemImage: "doc.on.doc") }
+                            }
+                            if !hit.download_url.isEmpty {
+                                Button { UIPasteboard.general.string = hit.download_url } label: { Label("Copy download URL", systemImage: "link") }
+                            }
+                        }
                         .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                         .listRowSeparator(.hidden).listRowBackground(Color.clear)
                 }
