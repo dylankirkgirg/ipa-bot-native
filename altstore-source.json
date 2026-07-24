@@ -9,19 +9,26 @@
       "bundleIdentifier": "com.dylankirkgirg.ipabot.native",
       "developerName": "dylankirkgirg",
       "subtitle": "Native SwiftUI client for ipa-bot",
-      "version": "1.1.8",
-      "versionDate": "2026-07-24T03:13:36Z",
-      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.8/IPABot-1.1.8-65.ipa",
+      "version": "1.1.9",
+      "versionDate": "2026-07-24T04:03:29Z",
+      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.9/IPABot-1.1.9-68.ipa",
       "localizedDescription": "Native SwiftUI client for ipa-bot.",
       "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "tintColor": "EC3013",
-      "size": 1831137,
+      "size": 1835659,
       "minOSVersion": "16.0",
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
       },
       "versions": [
+        {
+          "version": "1.1.9",
+          "date": "2026-07-24T04:03:29Z",
+          "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.9/IPABot-1.1.9-68.ipa",
+          "size": 1835659,
+          "minOSVersion": "16.0"
+        },
         {
           "version": "1.1.8",
           "date": "2026-07-24T03:13:36Z",
