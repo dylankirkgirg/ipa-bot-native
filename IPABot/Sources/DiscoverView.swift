@@ -53,6 +53,7 @@ struct DiscoverView: View {
         .navigationTitle(result?.artist_name ?? "More by this dev")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
+        .refreshable { await load() }
         .overlay { if isLoading { ProgressView() } }
         .sheet(item: $downloadTarget) { target in
             SafariView(url: target.url)

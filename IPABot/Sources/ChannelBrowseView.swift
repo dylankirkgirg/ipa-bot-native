@@ -66,6 +66,7 @@ struct ChannelBrowseView: View {
                 }
             }
             .task { await loadAvailable() }
+            .refreshable { if let selected { await load(selected) } else { await loadAvailable() } }
             .sheet(item: $downloadTarget) { target in SafariView(url: target.url) }
             .sheet(item: $shareTarget) { target in ShareSheet(items: [target.url]) }
         }
