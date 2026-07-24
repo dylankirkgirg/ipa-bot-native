@@ -262,6 +262,23 @@ struct DecryptBotResponse: Codable {
     var bot: String
 }
 
+struct ForkEntry: Codable, Identifiable {
+    var repo: String
+    var stars: Int
+    var repo_url: String?
+    var tag: String
+    var date: String
+    var asset_url: String
+    var id: String { repo }
+}
+
+struct ForksResponse: Codable {
+    var parent_repo: String?
+    var parent_status: String
+    var forks: [ForkEntry]
+    var error: String?
+}
+
 struct ActionResultWithBot: Codable {
     var ok: Bool
     var bot: String?

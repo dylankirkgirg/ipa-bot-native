@@ -274,6 +274,10 @@ final class APIClient: ObservableObject {
         try await get("/api/decrypt-bot")
     }
 
+    func forks(id: String) async throws -> ForksResponse {
+        try await get("/api/forks", query: ["id": id])
+    }
+
     func setDecryptBot(_ handle: String) async throws -> ActionResultWithBot {
         try await post("/api/decrypt-bot-set", body: ["handle": handle])
     }

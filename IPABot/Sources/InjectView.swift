@@ -18,6 +18,7 @@ struct InjectView: View {
     @State private var pollTask: Task<Void, Never>?
     @State private var customUrl = ""
     @State private var showAddTweak = false
+    @State private var forksTarget: Tweak?
     // Type-erased since Activity<T> requires iOS 16.2 availability, which a
     // stored property's type can't carry on a struct with no such guard.
     @State private var activityBox: Any?
@@ -73,6 +74,13 @@ struct InjectView: View {
                                 }
                             }
                         }
+                        .contextMenu {
+                            if tweak.repo != nil {
+                                Button { forksTarget = tweak } label: {
+                                    Label("Find forks", systemImage: "arrow.triangle.branch")
+                                }
+                            }
+                        }
                     }
                 } header: {
                     HStack {
@@ -117,6 +125,9 @@ struct InjectView: View {
             }
             .sheet(isPresented: $showAddTweak) {
                 AddTweakSheet(onSaved: { Task { await loadTweaks() } })
+            }
+            .sheet(item: $forksTarget) { tweak in
+                ForksResultView(tweakId: tweak.id, tweakName: tweak.name)
             }
         }
     }
