@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var router = DeepLinkRouter()
     @State private var selectedTab: AppTab?
     @State private var showReportBug = false
+    @State private var showWhatsNew = false
 
     var body: some View {
         Group {
@@ -18,6 +19,12 @@ struct ContentView: View {
                     }
                 }
                 .environmentObject(tabOrder)
+                .onAppear {
+                    if WhatsNew.shouldShow() { showWhatsNew = true }
+                }
+                .sheet(isPresented: $showWhatsNew, onDismiss: { WhatsNew.markSeen() }) {
+                    WhatsNewView()
+                }
             } else {
                 SettingsView(forceOnboarding: true)
             }

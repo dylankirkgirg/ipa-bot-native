@@ -8,6 +8,7 @@ struct SearchView: View {
     @State private var suggestions: [String] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var cacheBanner: String?
     @State private var downloadTarget: DownloadTarget?
     @State private var injectTarget: Hit?
     @State private var showDecrypt = false
@@ -78,6 +79,10 @@ struct SearchView: View {
                 }
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(Ledger.accent)
+                        .listRowSeparator(.hidden).listRowBackground(Color.clear)
+                }
+                if let cacheBanner {
+                    Text(cacheBanner).font(Ledger.body(12)).foregroundColor(Ledger.textTertiary)
                         .listRowSeparator(.hidden).listRowBackground(Color.clear)
                 }
                 if !suggestions.isEmpty {
@@ -377,29 +382,48 @@ struct SearchView: View {
     }
 
     private func loadRecent() async {
-        isLoading = true; errorMessage = nil
+        isLoading = true; errorMessage = nil; cacheBanner = nil
         do {
             let resp = try await api.recent()
             hits = resp.hits
+            SearchCache.save(query: "", hits: hits)
         } catch {
-            errorMessage = error.localizedDescription
+            if let cached = SearchCache.load(query: "") {
+                hits = cached.hits
+                cacheBanner = "Offline — showing cached results from \(formatAge(cached.age))"
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
         isLoading = false
     }
 
     private func runSearch() async {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        isLoading = true; errorMessage = nil; suggestions = []
+        isLoading = true; errorMessage = nil; suggestions = []; cacheBanner = nil
         do {
             let resp = try await api.search(query)
             hits = resp.hits
             suggestions = resp.suggestions ?? []
             if let err = resp.error { errorMessage = err }
+            SearchCache.save(query: query, hits: hits)
         } catch {
-            errorMessage = error.localizedDescription
+            if let cached = SearchCache.load(query: query) {
+                hits = cached.hits
+                cacheBanner = "Offline — showing cached results from \(formatAge(cached.age))"
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
         isLoading = false
         await loadHistory()
+    }
+
+    private func formatAge(_ seconds: TimeInterval) -> String {
+        let mins = Int(seconds / 60)
+        if mins < 1 { return "just now" }
+        if mins < 60 { return "\(mins)m ago" }
+        return "\(mins / 60)h ago"
     }
 
     private func toggleStar(_ hit: Hit) async {
