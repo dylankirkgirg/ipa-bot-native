@@ -270,6 +270,14 @@ final class APIClient: ObservableObject {
         try await post("/api/ios-set", body: ["version": version])
     }
 
+    func decryptBot() async throws -> DecryptBotResponse {
+        try await get("/api/decrypt-bot")
+    }
+
+    func setDecryptBot(_ handle: String) async throws -> ActionResultWithBot {
+        try await post("/api/decrypt-bot-set", body: ["handle": handle])
+    }
+
     func diff(query: String) async throws -> DiffResponse {
         try await get("/api/diff", query: ["q": query])
     }

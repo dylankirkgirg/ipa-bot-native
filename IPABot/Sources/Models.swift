@@ -258,6 +258,16 @@ struct TweakCheckResponse: Codable {
     var broken: [String]
 }
 
+struct DecryptBotResponse: Codable {
+    var bot: String
+}
+
+struct ActionResultWithBot: Codable {
+    var ok: Bool
+    var bot: String?
+    var error: String?
+}
+
 struct TrendingEntry: Codable, Identifiable {
     var original: String
     var count: Int

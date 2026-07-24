@@ -20,6 +20,8 @@ struct SettingsView: View {
     @State private var iosVersion = ""
     @State private var iosNote: String?
     @State private var isSavingIos = false
+    @State private var decryptBot = ""
+    @State private var isSavingDecryptBot = false
 
     private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
 
@@ -247,6 +249,20 @@ struct SettingsView: View {
                 .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
             }
 
+            HStack {
+                Text("Decrypt relay bot").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                Spacer()
+                TextField("@SomeBot", text: $decryptBot)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .multilineTextAlignment(.trailing)
+                    .font(Ledger.mono(12)).frame(width: 120)
+                Button("Save") { Task { await saveDecryptBot() } }
+                    .buttonStyle(LedgerOutlineButtonStyle())
+                    .disabled(isSavingDecryptBot || decryptBot.isEmpty)
+            }
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
             if let advancedNote {
                 Text(advancedNote).font(Ledger.body(12)).foregroundColor(Ledger.textSecondary).padding(.top, 8)
             }
@@ -263,6 +279,16 @@ struct SettingsView: View {
         let status = try? await api.status()
         autosignOn = status?.autosign ?? false
         iosVersion = status?.iosVersion ?? ""
+        decryptBot = (try? await api.decryptBot().bot) ?? ""
+    }
+
+    private func saveDecryptBot() async {
+        isSavingDecryptBot = true; advancedNote = nil
+        do {
+            let result = try await api.setDecryptBot(decryptBot)
+            advancedNote = result.ok ? "Decrypt bot set to @\(result.bot ?? decryptBot)." : (result.error ?? "Couldn't save.")
+        } catch { advancedNote = error.localizedDescription }
+        isSavingDecryptBot = false
     }
 
     private func saveIosVersion() async {
