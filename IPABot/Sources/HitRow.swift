@@ -6,6 +6,10 @@ struct HitRow: View {
     var onDownload: (() -> Void)? = nil
     var onSign: (() -> Void)? = nil
     var onInject: (() -> Void)? = nil
+    /// False when there's no download source (no direct URL, no vault copy) —
+    /// Sign/Inject/Download show disabled instead of vanishing, so it's clear
+    /// the app *can't* be delivered rather than looking like the row is broken.
+    var canDeliver: Bool = true
 
     private var isStarred: Bool { hit.starred ?? false }
 
@@ -27,6 +31,7 @@ struct HitRow: View {
                 }
                 .frame(width: 48, height: 48)
                 .clipped()
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .top, spacing: 6) {
@@ -40,15 +45,23 @@ struct HitRow: View {
                                 Glyph(.star, size: 16, color: isStarred ? Ledger.accent : Ledger.textTertiary)
                             }
                             .buttonStyle(.plain)
+                            .frame(width: 44, height: 44).contentShape(Rectangle())
+                            .accessibilityLabel(isStarred ? "Unstar" : "Star")
                         }
                     }
                     Text(hit.bundle_id)
                         .font(Ledger.mono(11))
                         .foregroundColor(Ledger.textSecondary)
                         .lineLimit(1)
-                    Text(tagLine)
-                        .font(Ledger.mono(11))
-                        .foregroundColor(Ledger.textTertiary)
+                    HStack(spacing: 4) {
+                        Text(tagLine)
+                            .font(Ledger.mono(11))
+                            .foregroundColor(Ledger.textTertiary)
+                        if SourceHealth.isFlaky(source: hit.source) {
+                            Circle().fill(Ledger.accent).frame(width: 5, height: 5)
+                                .accessibilityLabel("This source has failed recently")
+                        }
+                    }
                 }
             }
 
@@ -57,14 +70,22 @@ struct HitRow: View {
                     if let onDownload {
                         Button("Download .ipa", action: onDownload)
                             .buttonStyle(LedgerPrimaryButtonStyle())
+                            .disabled(!canDeliver)
+                            .opacity(canDeliver ? 1 : 0.4)
                     }
                     if let onSign {
-                        Button(action: onSign) { Glyph(.sign, size: 15) }
-                            .buttonStyle(LedgerIconButtonStyle(size: 40))
+                        Button(action: onSign) { Glyph(.sign, size: 15, color: canDeliver ? .white : Ledger.textTertiary) }
+                            .buttonStyle(LedgerIconButtonStyle(background: canDeliver ? Ledger.accent : .clear, border: canDeliver ? .clear : Ledger.divider))
+                            .disabled(!canDeliver)
+                            .accessibilityLabel("Sign")
+                            .accessibilityHint(canDeliver ? "Signs and queues this app for install" : "Unavailable — no download source for this app")
                     }
                     if let onInject {
-                        Button(action: onInject) { Glyph(.inject, size: 15) }
-                            .buttonStyle(LedgerIconButtonStyle(size: 40))
+                        Button(action: onInject) { Glyph(.inject, size: 15, color: canDeliver ? Ledger.text : Ledger.textTertiary) }
+                            .buttonStyle(LedgerIconButtonStyle())
+                            .disabled(!canDeliver)
+                            .accessibilityLabel("Inject tweaks")
+                            .accessibilityHint(canDeliver ? "Choose tweaks to inject before signing" : "Unavailable — no download source for this app")
                     }
                 }
             }

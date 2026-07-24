@@ -28,6 +28,8 @@ struct SearchView: View {
     @State private var bulkAlert: SignAlert?
     @State private var sortOption: SortOption = .relevance
     @State private var moddedOnly = false
+    @State private var showCompare = false
+    @State private var compareQuery = ""
 
     enum SortOption: String, CaseIterable, Identifiable {
         case relevance, sizeDesc, dateDesc, name
@@ -71,7 +73,9 @@ struct SearchView: View {
                                 Image(systemName: "trash").font(.system(size: 12))
                             }
                             .foregroundColor(Ledger.textTertiary)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                            .accessibilityLabel("Clear search history")
                         }
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 6, trailing: 20))
@@ -138,12 +142,13 @@ struct SearchView: View {
                     bulkBar
                 }
             }
-            .task { await loadRecent(); await loadHistory() }
+            .task { await PendingStarQueue.flush(api: api); await loadRecent(); await loadHistory() }
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
             .sheet(item: $downloadTarget) { target in SafariView(url: target.url) }
             .sheet(item: $injectTarget) { hit in InjectView(hit: hit) }
             .sheet(isPresented: $showDecrypt) { DecryptView() }
             .sheet(isPresented: $showDiff) { DiffView() }
+            .sheet(isPresented: $showCompare) { DiffView(prefillQuery: compareQuery) }
             .sheet(isPresented: $showTrending) {
                 TrendingView { term in query = term; Task { await runSearch() } }
             }
@@ -161,20 +166,24 @@ struct SearchView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .center, spacing: 8) {
             Text("Search").font(Ledger.heading(28))
-            Spacer()
-            HStack(spacing: 20) {
+            Spacer(minLength: 8)
+            HStack(spacing: 4) {
                 Button { Task { if query.isEmpty { await loadRecent() } else { await runSearch() } } } label: {
-                    Image(systemName: "arrow.clockwise").font(.system(size: 17)).foregroundColor(Ledger.textSecondary)
+                    Glyph(.refresh, size: 17, color: Ledger.textSecondary)
                 }
-                .frame(width: 32, height: 32).contentShape(Rectangle())
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .accessibilityLabel("Refresh")
 
                 Button(selectMode ? "Done" : "Select") {
                     selectMode.toggle()
                     if !selectMode { selected.removeAll() }
                 }
                 .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
+                .fixedSize()
 
                 Menu {
                     Picker("Sort", selection: $sortOption) {
@@ -186,7 +195,9 @@ struct SearchView: View {
                         .font(.system(size: 18))
                         .foregroundColor((sortOption != .relevance || moddedOnly) ? Ledger.accent : Ledger.textSecondary)
                 }
-                .frame(width: 32, height: 32).contentShape(Rectangle())
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .accessibilityLabel("Sort and filter")
+                .accessibilityValue(sortOption == .relevance && !moddedOnly ? "Default" : "Active")
 
                 // "..." reads unambiguously as "more actions" — a bare "+" was
                 // easy to miss as the way to reach Decrypt/Diff/etc.
@@ -202,11 +213,12 @@ struct SearchView: View {
                         .font(.system(size: 18))
                         .foregroundColor(Ledger.textSecondary)
                 }
-                .frame(width: 32, height: 32).contentShape(Rectangle())
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .accessibilityLabel("More actions")
             }
         }
         .padding(.top, 8).padding(.bottom, 6)
-        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 12))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }
@@ -224,6 +236,8 @@ struct SearchView: View {
                 Button { query = ""; Task { await loadRecent() } } label: {
                     Glyph(.xmark, size: 14, color: Ledger.textSecondary)
                 }
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
@@ -250,8 +264,9 @@ struct SearchView: View {
             hit: hit,
             onStar: interactive ? { Task { await toggleStar(hit) } } : nil,
             onDownload: interactive ? downloadAction(for: hit) : nil,
-            onSign: interactive && canDeliver(hit) ? { Task { await signDirect(hit) } } : nil,
-            onInject: interactive && canDeliver(hit) ? { injectTarget = hit } : nil
+            onSign: interactive ? { Task { await signDirect(hit) } } : nil,
+            onInject: interactive ? { injectTarget = hit } : nil,
+            canDeliver: canDeliver(hit)
         )
         .contextMenu {
             if interactive && canDeliver(hit) {
@@ -275,6 +290,14 @@ struct SearchView: View {
         HStack {
             Text("\(selected.count) selected").font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
             Spacer()
+            Button("Compare") {
+                if let name = hits.first(where: { selected.contains($0.id) })?.app_name {
+                    compareQuery = name
+                    showCompare = true
+                }
+            }
+            .buttonStyle(LedgerOutlineButtonStyle())
+            .frame(width: 100)
             Button(isBulkSigning ? "Signing…" : "Sign All") { Task { await bulkSign() } }
                 .buttonStyle(LedgerPrimaryButtonStyle())
                 .disabled(isBulkSigning || !selected.contains(where: { id in hits.first(where: { $0.id == id }).map(canDeliver) ?? false }))
@@ -314,8 +337,10 @@ struct SearchView: View {
         signingBundleId = hit.bundle_id
         do {
             let result = try await api.sign(ipaUrl: hit.download_url, ipaName: hit.app_name, options: SignOptions(), vaultMsgId: hit.vault_msg_id)
+            if !result.ok { SourceHealth.recordFailure(source: hit.source) }
             signAlert = SignAlert(message: result.ok ? (result.note ?? "Signing queued — check Library › Signed shortly.") : (result.error ?? "Sign request failed."))
         } catch {
+            SourceHealth.recordFailure(source: hit.source)
             signAlert = SignAlert(message: error.localizedDescription)
         }
         signingBundleId = nil
@@ -342,18 +367,19 @@ struct SearchView: View {
             return { downloadTarget = URL(string: hit.download_url).map(DownloadTarget.init) }
         }
         if let vaultId = hit.vault_msg_id {
-            return { Task { await downloadVault(vaultId: vaultId, name: hit.file_name ?? hit.app_name) } }
+            return { Task { await downloadVault(vaultId: vaultId, name: hit.file_name ?? hit.app_name, source: hit.source) } }
         }
         return nil
     }
 
-    private func downloadVault(vaultId: Int, name: String) async {
+    private func downloadVault(vaultId: Int, name: String, source: String) async {
         guard !isDownloadingVault else { return }
         isDownloadingVault = true; errorMessage = nil
         do {
             let fileURL = try await api.downloadFile(vaultMsgId: vaultId, name: name)
             shareTarget = ShareTarget(url: fileURL)
         } catch {
+            SourceHealth.recordFailure(source: source)
             errorMessage = error.localizedDescription
         }
         isDownloadingVault = false
@@ -433,8 +459,10 @@ struct SearchView: View {
         do {
             try await api.setStar(bundleId: hit.bundle_id, on: newState)
         } catch {
-            hits[idx].starred = !newState
-            errorMessage = error.localizedDescription
+            // Keep the optimistic flip and queue it — offline shouldn't feel
+            // like the tap didn't register, it'll flush next time we're back.
+            PendingStarQueue.enqueue(bundleId: hit.bundle_id, on: newState)
+            cacheBanner = "Offline — star queued, will sync when back online."
         }
     }
 }

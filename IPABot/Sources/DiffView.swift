@@ -4,6 +4,8 @@ struct DiffView: View {
     @EnvironmentObject var api: APIClient
     @Environment(\.dismiss) private var dismiss
 
+    var prefillQuery: String = ""
+
     @State private var query = ""
     @State private var result: DiffResponse?
     @State private var isLoading = false
@@ -46,6 +48,11 @@ struct DiffView: View {
             .navigationTitle("Diff")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }
+            .task {
+                guard query.isEmpty, !prefillQuery.isEmpty else { return }
+                query = prefillQuery
+                await run()
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }

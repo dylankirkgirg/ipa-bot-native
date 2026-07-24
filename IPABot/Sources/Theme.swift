@@ -45,14 +45,39 @@ enum Ledger {
     // MARK: Type
     // Uses San Francisco at heavy weights to approximate Archivo's geometric
     // grip until the real font is bundled — see README "Swapping in Archivo".
+    // Routed through UIFontMetrics so every Ledger.* call scales with
+    // Dynamic Type instead of staying pinned to its literal point size.
     static func heading(_ size: CGFloat, weight: Font.Weight = .heavy) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        scaledFont(size: size, weight: weight)
     }
     static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        scaledFont(size: size, weight: weight)
     }
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        scaledFont(size: size, weight: weight, monospaced: true)
+    }
+
+    private static func scaledFont(size: CGFloat, weight: Font.Weight, monospaced: Bool = false) -> Font {
+        let uiWeight = uiFontWeight(for: weight)
+        let base = monospaced
+            ? UIFont.monospacedSystemFont(ofSize: size, weight: uiWeight)
+            : UIFont.systemFont(ofSize: size, weight: uiWeight)
+        return Font(UIFontMetrics.default.scaledFont(for: base))
+    }
+
+    private static func uiFontWeight(for weight: Font.Weight) -> UIFont.Weight {
+        switch weight {
+        case .black: return .black
+        case .heavy: return .heavy
+        case .bold: return .bold
+        case .semibold: return .semibold
+        case .medium: return .medium
+        case .regular: return .regular
+        case .light: return .light
+        case .thin: return .thin
+        case .ultraLight: return .ultraLight
+        default: return .regular
+        }
     }
 
     // MARK: Global chrome
@@ -139,14 +164,19 @@ struct LedgerOutlineButtonStyle: ButtonStyle {
 }
 
 /// A square, icon-only action — sign/inject buttons next to a primary bar.
+/// `size` is the tappable frame, held to the 44pt HIG minimum by default.
 struct LedgerIconButtonStyle: ButtonStyle {
-    var size: CGFloat = 40
+    var size: CGFloat = 44
+    var background: Color = .clear
+    var pressedBackground: Color = Ledger.surface
+    var foreground: Color = Ledger.text
+    var border: Color = Ledger.divider
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .foregroundColor(Ledger.text)
+            .foregroundColor(foreground)
             .frame(width: size, height: size)
-            .background(configuration.isPressed ? Ledger.surface : Color.clear)
-            .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+            .background(configuration.isPressed ? pressedBackground : background)
+            .overlay(Rectangle().stroke(border, lineWidth: 1))
     }
 }
 
@@ -154,6 +184,7 @@ struct LedgerIconButtonStyle: ButtonStyle {
 /// the pill shape conflicts with Ledger's zero-radius rule.
 struct LedgerCheckbox: View {
     @Binding var isOn: Bool
+    var label: String? = nil
     var body: some View {
         Button { isOn.toggle() } label: {
             ZStack {
@@ -162,8 +193,13 @@ struct LedgerCheckbox: View {
                 if isOn { Glyph(.check, size: 11, color: .white) }
             }
             .frame(width: 18, height: 18)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label ?? "")
+        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -172,9 +208,9 @@ struct LedgerToggleRow: View {
     @Binding var isOn: Bool
     var body: some View {
         HStack {
-            Text(label).font(Ledger.body(14)).foregroundColor(Ledger.text)
+            Text(label).font(Ledger.body(14)).foregroundColor(Ledger.text).accessibilityHidden(true)
             Spacer()
-            LedgerCheckbox(isOn: $isOn)
+            LedgerCheckbox(isOn: $isOn, label: label)
         }
         .padding(.vertical, 9)
         .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }

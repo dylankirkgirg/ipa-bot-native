@@ -49,16 +49,18 @@ struct SettingsView: View {
                             .padding(.horizontal, 20).padding(.bottom, 12)
                     }
 
+                    groupHeader("Bot")
                     LedgerSectionLabel(text: "Connection")
                     connectionSection
 
                     LedgerSectionLabel(text: "Signing certificate")
                     certSection
 
-                    LedgerSectionLabel(text: "Appearance")
-                    appearanceSection
-
                     if api.isConfigured {
+                        groupHeader("App")
+                        LedgerSectionLabel(text: "Appearance")
+                        appearanceSection
+
                         LedgerSectionLabel(text: "Advanced")
                         advancedSection
 
@@ -88,6 +90,21 @@ struct SettingsView: View {
             }
             .sheet(item: $exportTarget) { target in ShareSheet(items: [target.url]) }
         }
+    }
+
+    /// Marks the "talking to the server" settings vs. "this device" settings
+    /// with a real visual break — the flat list of thin rows was the "clunky"
+    /// complaint; a rule plus an oversized label reads as two distinct screens.
+    @ViewBuilder
+    private func groupHeader(_ title: String) -> some View {
+        if title != "Bot" {
+            Rectangle().fill(Ledger.divider).frame(height: 1).padding(.top, 20)
+        }
+        Text(title.uppercased())
+            .font(Ledger.heading(20, weight: .black))
+            .foregroundColor(Ledger.text)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
     }
 
     private var connectionSection: some View {

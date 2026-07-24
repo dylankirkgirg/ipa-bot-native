@@ -23,6 +23,7 @@ struct LibraryView: View {
     @State private var bulkAlert: BulkAlert?
     @State private var installTarget: DownloadTarget?
     @State private var showSignInstall = false
+    @State private var showUpdateCheck = false
 
     struct BulkAlert: Identifiable { let id = UUID(); let message: String }
 
@@ -75,6 +76,7 @@ struct LibraryView: View {
                 }
             }
             .sheet(isPresented: $showSignInstall) { SignInstallView() }
+            .sheet(isPresented: $showUpdateCheck) { UpdateCheckView(stars: stars) }
             .sheet(item: $installTarget) { target in SafariView(url: target.url) }
             .alert(item: $bulkAlert) { alert in
                 Alert(title: Text("Library"), message: Text(alert.message), dismissButton: .default(Text("OK")))
@@ -90,6 +92,8 @@ struct LibraryView: View {
                 if isRebuilding { ProgressView() } else { Glyph(.refresh, size: 20, color: Ledger.textSecondary) }
             }
             .disabled(isRebuilding)
+            .frame(width: 44, height: 44).contentShape(Rectangle())
+            .accessibilityLabel("Rebuild library")
             Spacer()
             Text("Library").font(Ledger.heading(26))
             Spacer()
@@ -103,6 +107,8 @@ struct LibraryView: View {
             } label: {
                 Glyph(.plus, size: 20, color: Ledger.textSecondary)
             }
+            .frame(width: 44, height: 44).contentShape(Rectangle())
+            .accessibilityLabel("Add to library")
         }
         .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 8)
     }
@@ -168,6 +174,12 @@ struct LibraryView: View {
     }
 
     @ViewBuilder private var starredRows: some View {
+        if !stars.isEmpty {
+            Button("Check for updates") { showUpdateCheck = true }
+                .buttonStyle(LedgerOutlineButtonStyle())
+                .padding(.vertical, 6)
+                .listRowSeparator(.hidden).listRowBackground(Color.clear)
+        }
         if stars.isEmpty { emptyRow("No starred apps yet.") }
         ForEach(stars) { star in
             HStack(spacing: 12) {
@@ -194,6 +206,7 @@ struct LibraryView: View {
             }
             .buttonStyle(LedgerIconButtonStyle())
             .disabled(isResigning || signed.isEmpty)
+            .accessibilityLabel("Re-sign all")
         }
         .padding(.vertical, 6)
         .listRowSeparator(.hidden).listRowBackground(Color.clear)
@@ -210,12 +223,38 @@ struct LibraryView: View {
                         Text("v\(app.version) · \(app.bundle)").font(Ledger.mono(11)).foregroundColor(Ledger.textTertiary)
                     }
                     Spacer()
+                    expiryBadge(for: app)
                 }
             }
             .buttonStyle(.plain)
             .padding(.vertical, 8)
             .listRowSeparator(.hidden).listRowBackground(Color.clear)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+        }
+    }
+
+    // Free-account signing certs expire after 7 days — this is a client-side
+    // estimate off the sign timestamp, not a value the server sends back.
+    private func expiryBadge(for app: SignedApp) -> some View {
+        let expiry = Date(timeIntervalSince1970: app.ts).addingTimeInterval(7 * 86400)
+        let daysLeft = Int(expiry.timeIntervalSinceNow / 86400)
+        let label = daysLeft <= 0 ? "Expired" : "\(daysLeft)d left"
+        return Text(label)
+            .font(Ledger.mono(10))
+            .foregroundColor(daysLeft <= 1 ? Ledger.accent : Ledger.textTertiary)
+    }
+
+    private func scheduleExpiryReminders() {
+        for app in signed {
+            let expiry = Date(timeIntervalSince1970: app.ts).addingTimeInterval(7 * 86400)
+            let fireAt = expiry.addingTimeInterval(-24 * 3600)
+            guard fireAt.timeIntervalSinceNow > 0 else { continue }
+            LocalNotifier.scheduleOnce(
+                id: "expiry-\(app.id)",
+                title: "Signing cert expiring soon",
+                body: "\(app.title) will stop opening in ~24h — re-sign it from Library.",
+                in: fireAt.timeIntervalSinceNow
+            )
         }
     }
 
@@ -376,7 +415,26 @@ struct LibraryView: View {
         } catch {
             // signed history is best-effort — don't block the rest of Library on it
         }
+        scheduleExpiryReminders()
+        maybeNudgeUnsignedStars()
         isLoading = false
+    }
+
+    // At most one nudge per day — starred apps with a download source but no
+    // matching entry in the last-24h signed list are "waiting to be signed".
+    private func maybeNudgeUnsignedStars() {
+        let signedBundles = Set(signed.map { $0.bundle })
+        let waiting = stars.filter { !signedBundles.contains($0.bundle_id) && ($0.download_url?.isEmpty == false || $0.vault_msg_id != nil) }
+        guard waiting.count >= 3 else { return }
+        let lastKey = "ipabot.lastUnsignedNudge"
+        let last = UserDefaults.standard.object(forKey: lastKey) as? Date
+        guard last == nil || Date().timeIntervalSince(last!) > 24 * 3600 else { return }
+        UserDefaults.standard.set(Date(), forKey: lastKey)
+        LocalNotifier.fireNow(
+            id: "unsigned-nudge",
+            title: "\(waiting.count) starred apps waiting",
+            body: "Sign them now, or say \"Sign my starred apps in IPABot\" to Siri."
+        )
     }
 
     private func unstar(at indexSet: IndexSet) async {

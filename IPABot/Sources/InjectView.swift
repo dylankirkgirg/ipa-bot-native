@@ -89,6 +89,8 @@ struct InjectView: View {
                         Button { showAddTweak = true } label: {
                             Image(systemName: "plus.circle")
                         }
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                        .accessibilityLabel("Add tweak")
                     }
                 }
 
