@@ -3,31 +3,39 @@
   "identifier": "com.dylankirkgirg.ipabot-native.source",
   "sourceURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/altstore-source.json",
   "website": "https://github.com/dylankirkgirg/ipa-bot-native",
+  "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
   "apps": [
     {
       "name": "IPABot",
       "bundleIdentifier": "com.dylankirkgirg.ipabot.native",
       "developerName": "dylankirkgirg",
-      "subtitle": "Native SwiftUI client for ipa-bot",
-      "version": "1.1.9",
-      "versionDate": "2026-07-24T04:03:29Z",
-      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.9/IPABot-1.1.9-68.ipa",
-      "localizedDescription": "Native SwiftUI client for ipa-bot — search, decrypt, sign, and inject tweaks into IPAs from your phone, no Telegram required.\n\nFeatures:\n- Search across every configured source and channel, sort by size/date/name, filter modded-only\n- Sign and inject tweaks straight from a result — multi-select and Sign All for batches\n- Star apps and get notified when a newer version lands, with one-tap re-sign\n- Track signed apps and their 7-day cert expiry, with a reminder before they die\n- Vault downloads, entitlements/inspect jobs, source and TestFlight watches\n- Offline-tolerant: search results cache, queued actions sync when you're back\n- Siri Shortcuts: \"check my queue\", \"sign an IPA\", \"sign my starred apps\"\n- Home Screen widget, Lock Screen/Dynamic Island progress, shake to report a bug\n\nSettings are split into Bot (your ipa-bot server + signing cert) and App (theme, tab order, advanced/restart, danger zone).",
+      "subtitle": "Search, sign, and inject IPAs — no Telegram needed",
+      "version": "1.1.10",
+      "versionDate": "2026-07-24T04:35:00Z",
+      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.10/IPABot-1.1.10-73.ipa",
+      "localizedDescription": "The whole ipa-bot pipeline in your pocket. Search every source you've configured, sign and inject in a couple taps, and keep tabs on what's starred, signed, and about to expire — all without opening Telegram.\n\nWHAT IT DOES\n★ Search — every source and channel at once, sorted your way, modded-only filter, offline cache when the server's unreachable\n✒ Sign & Inject — one tap from a result, multi-select for Sign All, tweaks injected before signing\n🔔 Stay ahead — starred apps flag when an update drops, signed apps count down to their 7-day cert expiry with a reminder before it dies\n📦 Library — stars, watches, sources, notes, pins, aliases, TestFlight watches, all in one place\n🗣 Siri — \"check my queue\", \"sign an IPA\", \"sign my starred apps\"\n📲 Widgets & Live Activities — queue depth on your Home Screen, sign/inject/decrypt progress on your Lock Screen and Dynamic Island\n🤫 Offline-tolerant — star toggles queue up and sync themselves once you're back online\n\nSettings split cleanly: BOT (your ipa-bot server + signing cert) vs. APP (theme, tab order, restart, danger zone) — no more digging through one long list.",
       "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "screenshotURLs": [
-        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/01-search.png",
-        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/02-library.png",
-        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/03-diagnostics.png",
-        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/04-settings.png"
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/01-search.jpg",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/02-library.jpg",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/03-diagnostics.jpg",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/04-settings.jpg"
       ],
       "tintColor": "EC3013",
-      "size": 1835659,
+      "size": 1889578,
       "minOSVersion": "16.0",
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
       },
       "versions": [
+        {
+          "version": "1.1.10",
+          "date": "2026-07-24T04:35:00Z",
+          "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.10/IPABot-1.1.10-73.ipa",
+          "size": 1889578,
+          "minOSVersion": "16.0"
+        },
         {
           "version": "1.1.9",
           "date": "2026-07-24T04:03:29Z",
