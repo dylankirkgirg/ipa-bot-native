@@ -107,6 +107,7 @@ struct StatusWidget: Widget {
         StaticConfiguration(kind: kind, provider: StatusProvider()) { entry in
             StatusWidgetView(entry: entry)
                 .background(Color.black)
+                .widgetURL(URL(string: "ipabot://open?tab=diagnostics"))
         }
         .configurationDisplayName("IPABot Status")
         .description("Queue depth, signed count, and A1 sniper status.")

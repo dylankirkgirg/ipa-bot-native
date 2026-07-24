@@ -24,6 +24,21 @@ struct SearchView: View {
     @State private var selected: Set<String> = []
     @State private var isBulkSigning = false
     @State private var bulkAlert: SignAlert?
+    @State private var sortOption: SortOption = .relevance
+    @State private var moddedOnly = false
+
+    enum SortOption: String, CaseIterable, Identifiable {
+        case relevance, sizeDesc, dateDesc, name
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .relevance: return "Relevance"
+            case .sizeDesc: return "Largest first"
+            case .dateDesc: return "Newest first"
+            case .name: return "Name (A-Z)"
+            }
+        }
+    }
 
     struct TextJobTarget: Identifiable {
         let id: String
@@ -68,7 +83,7 @@ struct SearchView: View {
                             .listRowSeparator(.hidden).listRowBackground(Color.clear)
                     }
                 }
-                ForEach(hits) { hit in
+                ForEach(displayedHits) { hit in
                     Group {
                         if selectMode {
                             Button { toggleSelect(hit) } label: {
@@ -146,6 +161,16 @@ struct SearchView: View {
             }
             .font(Ledger.body(13)).foregroundColor(Ledger.textSecondary)
             Menu {
+                Picker("Sort", selection: $sortOption) {
+                    ForEach(SortOption.allCases) { opt in Text(opt.title).tag(opt) }
+                }
+                Toggle("Modded only", isOn: $moddedOnly)
+            } label: {
+                Image(systemName: "arrow.up.arrow.down.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor((sortOption != .relevance || moddedOnly) ? Ledger.accent : Ledger.textSecondary)
+            }
+            Menu {
                 Button("Sign a file") { showSign = true }
                 Button("Decrypt") { showDecrypt = true }
                 Button("Diff") { showDiff = true }
@@ -182,6 +207,17 @@ struct SearchView: View {
         .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 8, trailing: 20))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
+    }
+
+    private var displayedHits: [Hit] {
+        var out = moddedOnly ? hits.filter { $0.is_modded == true } : hits
+        switch sortOption {
+        case .relevance: break
+        case .sizeDesc: out.sort { $0.size_mb > $1.size_mb }
+        case .dateDesc: out.sort { $0.date_iso > $1.date_iso }
+        case .name: out.sort { $0.app_name.localizedCaseInsensitiveCompare($1.app_name) == .orderedAscending }
+        }
+        return out
     }
 
     @ViewBuilder
