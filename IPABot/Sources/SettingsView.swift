@@ -223,6 +223,16 @@ struct SettingsView: View {
             .padding(.vertical, 9)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
 
+            Button { Task { await runTweakCheck() } } label: {
+                HStack {
+                    Glyph(.gear, size: 15, color: Ledger.textSecondary)
+                    Text("Check tweak repos").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                }
+            }
+            .disabled(isBusyAdvanced)
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
             ForEach(restartableServices, id: \.self) { service in
                 Button { Task { await restart(service) } } label: {
                     HStack {
@@ -310,6 +320,17 @@ struct SettingsView: View {
     private func runExport() async {
         isBusyAdvanced = true; advancedNote = nil
         do { exportTarget = ShareTarget(url: try await api.exportDump()) } catch { advancedNote = error.localizedDescription }
+        isBusyAdvanced = false
+    }
+
+    private func runTweakCheck() async {
+        isBusyAdvanced = true; advancedNote = nil
+        do {
+            let result = try await api.tweakCheck()
+            advancedNote = result.broken.isEmpty
+                ? "All \(result.total) tweak repos are live."
+                : "\(result.broken.count) of \(result.total) tweak repos broken."
+        } catch { advancedNote = error.localizedDescription }
         isBusyAdvanced = false
     }
 

@@ -253,6 +253,11 @@ struct TrendingResponse: Codable {
     var trending: [TrendingEntry]
 }
 
+struct TweakCheckResponse: Codable {
+    var total: Int
+    var broken: [String]
+}
+
 struct TrendingEntry: Codable, Identifiable {
     var original: String
     var count: Int
