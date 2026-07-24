@@ -43,6 +43,7 @@ private struct FieldSheet: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

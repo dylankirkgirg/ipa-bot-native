@@ -31,6 +31,7 @@ struct TextJobResultView: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .task { await poll() }

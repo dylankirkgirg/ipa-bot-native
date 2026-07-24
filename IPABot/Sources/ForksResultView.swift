@@ -33,6 +33,7 @@ struct ForksResultView: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Forks — \(tweakName)")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

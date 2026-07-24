@@ -17,6 +17,7 @@ struct ReorderTabsView: View {
             }
         }
         .ledgerBackground()
+        .scrollIndicators(.hidden)
         .navigationTitle("Reorder Tabs")
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))

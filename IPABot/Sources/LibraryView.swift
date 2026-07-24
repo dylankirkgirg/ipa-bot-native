@@ -62,6 +62,7 @@ struct LibraryView: View {
                 content
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationBarHidden(true)
             .task { await load() }
             .overlay { if isLoading { ProgressView() } }
@@ -165,6 +166,7 @@ struct LibraryView: View {
         }
         .listStyle(.plain)
         .ledgerBackground()
+        .scrollIndicators(.hidden)
         .refreshable { await load() }
     }
 

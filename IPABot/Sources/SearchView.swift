@@ -30,6 +30,7 @@ struct SearchView: View {
     @State private var moddedOnly = false
     @State private var showCompare = false
     @State private var compareQuery = ""
+    @State private var watches: [WatchEntry] = []
 
     enum SortOption: String, CaseIterable, Identifiable {
         case relevance, sizeDesc, dateDesc, name
@@ -128,6 +129,7 @@ struct SearchView: View {
             }
             .listStyle(.plain)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationBarHidden(true)
             .scrollDismissesKeyboard(.interactively)
             .overlay {
@@ -142,7 +144,12 @@ struct SearchView: View {
                     bulkBar
                 }
             }
-            .task { await PendingStarQueue.flush(api: api); await loadRecent(); await loadHistory() }
+            .task {
+                await PendingStarQueue.flush(api: api)
+                await loadWatches()
+                await loadRecent()
+                await loadHistory()
+            }
             .refreshable { if query.isEmpty { await loadRecent() } else { await runSearch() } }
             .sheet(item: $downloadTarget) { target in SafariView(url: target.url) }
             .sheet(item: $injectTarget) { hit in InjectView(hit: hit) }
@@ -389,6 +396,26 @@ struct SearchView: View {
         history = (try? await api.searchHistory().history) ?? []
     }
 
+    private func loadWatches() async {
+        watches = (try? await api.library().watches) ?? []
+    }
+
+    // The server already emails/DMs watch hits — this is just an in-app echo
+    // for whoever isn't watching Telegram, deduped so the same hit doesn't
+    // re-fire every time /recent or a search happens to include it again.
+    private func notifyWatchMatches(in freshHits: [Hit]) {
+        guard !watches.isEmpty else { return }
+        let seenKey = "ipabot.watchNotified"
+        var seen = Set(UserDefaults.standard.stringArray(forKey: seenKey) ?? [])
+        for hit in freshHits {
+            guard !seen.contains(hit.id) else { continue }
+            guard watches.contains(where: { hit.app_name.localizedCaseInsensitiveContains($0.term) }) else { continue }
+            seen.insert(hit.id)
+            LocalNotifier.fireNow(id: "watch-\(hit.id)", title: "Watch match: \(hit.app_name)", body: "v\(hit.version) via \(hit.source)")
+        }
+        UserDefaults.standard.set(Array(seen.suffix(200)), forKey: seenKey)
+    }
+
     private func clearHistory() async {
         try? await api.clearHistory()
         history = []
@@ -413,6 +440,7 @@ struct SearchView: View {
             let resp = try await api.recent()
             hits = resp.hits
             SearchCache.save(query: "", hits: hits)
+            notifyWatchMatches(in: hits)
         } catch {
             if let cached = SearchCache.load(query: "") {
                 hits = cached.hits
@@ -433,6 +461,7 @@ struct SearchView: View {
             suggestions = resp.suggestions ?? []
             if let err = resp.error { errorMessage = err }
             SearchCache.save(query: query, hits: hits)
+            notifyWatchMatches(in: hits)
         } catch {
             if let cached = SearchCache.load(query: query) {
                 hits = cached.hits

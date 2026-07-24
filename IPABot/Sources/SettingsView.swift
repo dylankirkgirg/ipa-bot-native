@@ -25,6 +25,7 @@ struct SettingsView: View {
     @State private var showNukeConfirm = false
     @State private var isNuking = false
     @State private var nukeResultAlert: NukeAlert?
+    @State private var showWhatsNew = false
 
     struct NukeAlert: Identifiable {
         let id = UUID()
@@ -70,6 +71,7 @@ struct SettingsView: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationBarHidden(true)
             .scrollDismissesKeyboard(.interactively)
             .task { await loadCert() }
@@ -89,6 +91,7 @@ struct SettingsView: View {
                 }
             }
             .sheet(item: $exportTarget) { target in ShareSheet(items: [target.url]) }
+            .sheet(isPresented: $showWhatsNew) { WhatsNewView() }
         }
     }
 
@@ -219,6 +222,16 @@ struct SettingsView: View {
             NavigationLink { ReorderTabsView() } label: {
                 HStack {
                     Text("Reorder tabs").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                    Spacer()
+                    Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
+                }
+            }
+            .padding(.vertical, 9)
+            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
+
+            Button { showWhatsNew = true } label: {
+                HStack {
+                    Text("What's New in \(WhatsNew.currentVersion)").font(Ledger.body(14)).foregroundColor(Ledger.text)
                     Spacer()
                     Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
                 }

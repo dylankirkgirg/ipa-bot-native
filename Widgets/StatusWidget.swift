@@ -87,6 +87,14 @@ struct StatusWidgetView: View {
                     }
                 }
                 Spacer()
+                if entry.queueTotal > 0 {
+                    if #available(iOS 17.0, *) {
+                        Button(intent: ClearQueueIntent()) {
+                            Text("Clear queue").font(.system(size: 10, weight: .bold))
+                        }
+                        .tint(.red)
+                    }
+                }
             }
             .padding()
         }

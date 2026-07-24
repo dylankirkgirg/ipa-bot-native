@@ -57,6 +57,7 @@ struct ChannelBrowseView: View {
             }
             .listStyle(.plain)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Channels")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

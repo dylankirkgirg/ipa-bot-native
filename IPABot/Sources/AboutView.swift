@@ -108,6 +108,7 @@ struct AboutView: View {
         }
         .listStyle(.plain)
         .ledgerBackground()
+        .scrollIndicators(.hidden)
         .navigationTitle(info?.app_name ?? fallbackName)
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

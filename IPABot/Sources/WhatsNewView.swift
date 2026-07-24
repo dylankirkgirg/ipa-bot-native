@@ -16,6 +16,7 @@ struct WhatsNewView: View {
             }
             .listStyle(.plain)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("What's New in \(WhatsNew.currentVersion)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

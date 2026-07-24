@@ -23,6 +23,7 @@ struct ReportBugView: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Report a Bug")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

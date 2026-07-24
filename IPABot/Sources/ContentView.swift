@@ -19,9 +19,6 @@ struct ContentView: View {
                     }
                 }
                 .environmentObject(tabOrder)
-                .onAppear {
-                    if WhatsNew.shouldShow() { showWhatsNew = true }
-                }
                 .sheet(isPresented: $showWhatsNew, onDismiss: { WhatsNew.markSeen() }) {
                     WhatsNewView()
                 }

@@ -46,6 +46,7 @@ struct AddPresetSheet: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Add Preset")
             .navigationBarTitleDisplayMode(.inline)
             .task { await loadTweaks() }

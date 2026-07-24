@@ -35,6 +35,7 @@ struct AddTweakSheet: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Add Tweak")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

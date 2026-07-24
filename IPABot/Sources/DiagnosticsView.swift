@@ -71,6 +71,7 @@ struct DiagnosticsView: View {
             }
             .listStyle(.plain)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationBarHidden(true)
             .task { await load() }
             .refreshable { await load() }
@@ -113,6 +114,25 @@ struct DiagnosticsView: View {
             errorMessage = error.localizedDescription
         }
         sniper = try? await api.sniper().heartbeat
+        maybeNotifySniperStale()
         isLoading = false
+    }
+
+    // Fires once per stale streak, not once per poll — cleared as soon as
+    // the sniper reports fresh again so a real re-staleness re-alerts.
+    private func maybeNotifySniperStale() {
+        guard let sniper else { return }
+        let key = "ipabot.sniperWasStale"
+        let wasStale = UserDefaults.standard.bool(forKey: key)
+        if sniper.fresh {
+            UserDefaults.standard.set(false, forKey: key)
+        } else if !wasStale {
+            UserDefaults.standard.set(true, forKey: key)
+            LocalNotifier.fireNow(
+                id: "sniper-stale",
+                title: "A1 Sniper gone quiet",
+                body: "No heartbeat in \(sniper.ageSec)s — check Diagnostics."
+            )
+        }
     }
 }

@@ -39,6 +39,7 @@ struct DecryptView: View {
                 }
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Decrypt")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

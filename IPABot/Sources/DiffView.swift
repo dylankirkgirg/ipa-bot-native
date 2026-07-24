@@ -45,6 +45,7 @@ struct DiffView: View {
             }
             .listStyle(.insetGrouped)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Diff")
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

@@ -19,6 +19,7 @@ struct UpdateCheckView: View {
     @State private var signingBundleId: String?
     @State private var resultAlert: ResultAlert?
     @State private var checkedCount = 0
+    @State private var changelogTarget: StaleEntry?
 
     struct ResultAlert: Identifiable { let id = UUID(); let message: String }
 
@@ -39,11 +40,14 @@ struct UpdateCheckView: View {
                 } else {
                     ForEach(stale) { entry in
                         HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(entry.star.app_name).font(Ledger.heading(14, weight: .semibold)).foregroundColor(Ledger.text)
-                                Text("v\(entry.star.version) → v\(entry.latestVersion)")
-                                    .font(Ledger.mono(11)).foregroundColor(Ledger.textSecondary)
+                            Button { changelogTarget = entry } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(entry.star.app_name).font(Ledger.heading(14, weight: .semibold)).foregroundColor(Ledger.text)
+                                    Text("v\(entry.star.version) → v\(entry.latestVersion)")
+                                        .font(Ledger.mono(11)).foregroundColor(Ledger.textSecondary)
+                                }
                             }
+                            .buttonStyle(.plain)
                             Spacer()
                             Button(signingBundleId == entry.id ? "…" : "Sign") { Task { await signLatest(entry) } }
                                 .buttonStyle(LedgerOutlineButtonStyle())
@@ -57,6 +61,7 @@ struct UpdateCheckView: View {
             }
             .listStyle(.plain)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Check for Updates")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -65,6 +70,7 @@ struct UpdateCheckView: View {
             .alert(item: $resultAlert) { alert in
                 Alert(title: Text("Sign"), message: Text(alert.message), dismissButton: .default(Text("OK")))
             }
+            .sheet(item: $changelogTarget) { entry in ChangelogView(query: entry.star.app_name) }
             .task { await checkAll() }
         }
     }

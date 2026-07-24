@@ -109,6 +109,7 @@ struct InjectView: View {
             }
             .navigationTitle(hit.app_name)
             .navigationBarTitleDisplayMode(.inline)
+            .scrollIndicators(.hidden)
             .task { await loadTweaks() }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

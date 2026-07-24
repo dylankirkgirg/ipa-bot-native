@@ -57,6 +57,7 @@ struct SignInstallView: View {
                 .padding(16)
             }
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle("Sign & Install")
             .navigationBarTitleDisplayMode(.inline)
             .task { await loadCert() }

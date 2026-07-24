@@ -50,6 +50,7 @@ struct DiscoverView: View {
         }
         .listStyle(.insetGrouped)
         .ledgerBackground()
+        .scrollIndicators(.hidden)
         .navigationTitle(result?.artist_name ?? "More by this dev")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }

@@ -37,6 +37,7 @@ struct ChangelogView: View {
             }
             .listStyle(.insetGrouped)
             .ledgerBackground()
+            .scrollIndicators(.hidden)
             .navigationTitle(result?.app_name ?? query)
             .navigationBarTitleDisplayMode(.inline)
             .overlay { if isLoading { ProgressView() } }

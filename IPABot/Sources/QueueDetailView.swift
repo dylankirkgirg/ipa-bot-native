@@ -28,6 +28,7 @@ struct QueueDetailView: View {
         }
         .listStyle(.insetGrouped)
         .ledgerBackground()
+        .scrollIndicators(.hidden)
         .navigationTitle(type == "inject" ? "Inject Queue" : "Decrypt Queue")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
