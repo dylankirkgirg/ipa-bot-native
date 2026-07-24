@@ -70,7 +70,7 @@ struct SearchView: View {
                                     .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
                             }
                             Button { Task { await clearHistory() } } label: {
-                                Image(systemName: "trash").font(.system(size: 12))
+                                Image(systemName: "trash").font(Ledger.body(12))
                             }
                             .foregroundColor(Ledger.textTertiary)
                             .frame(minWidth: 44, minHeight: 44)
@@ -105,7 +105,7 @@ struct SearchView: View {
                                 HStack(spacing: 10) {
                                     Image(systemName: selected.contains(hit.id) ? "checkmark.circle.fill" : "circle")
                                         .foregroundColor(selected.contains(hit.id) ? Ledger.accent : Ledger.textTertiary)
-                                        .font(.system(size: 20))
+                                        .font(Ledger.body(20))
                                     row(for: hit, interactive: false)
                                 }
                             }
@@ -192,7 +192,7 @@ struct SearchView: View {
                     Toggle("Modded only", isOn: $moddedOnly)
                 } label: {
                     Image(systemName: "arrow.up.arrow.down.circle")
-                        .font(.system(size: 18))
+                        .font(Ledger.body(18))
                         .foregroundColor((sortOption != .relevance || moddedOnly) ? Ledger.accent : Ledger.textSecondary)
                 }
                 .frame(width: 44, height: 44).contentShape(Rectangle())
@@ -210,7 +210,7 @@ struct SearchView: View {
                     Button("Random") { Task { await runRandom() } }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18))
+                        .font(Ledger.body(18))
                         .foregroundColor(Ledger.textSecondary)
                 }
                 .frame(width: 44, height: 44).contentShape(Rectangle())

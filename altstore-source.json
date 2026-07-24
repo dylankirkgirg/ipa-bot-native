@@ -12,8 +12,14 @@
       "version": "1.1.9",
       "versionDate": "2026-07-24T04:03:29Z",
       "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.9/IPABot-1.1.9-68.ipa",
-      "localizedDescription": "Native SwiftUI client for ipa-bot.",
+      "localizedDescription": "Native SwiftUI client for ipa-bot — search, decrypt, sign, and inject tweaks into IPAs from your phone, no Telegram required.\n\nFeatures:\n- Search across every configured source and channel, sort by size/date/name, filter modded-only\n- Sign and inject tweaks straight from a result — multi-select and Sign All for batches\n- Star apps and get notified when a newer version lands, with one-tap re-sign\n- Track signed apps and their 7-day cert expiry, with a reminder before they die\n- Vault downloads, entitlements/inspect jobs, source and TestFlight watches\n- Offline-tolerant: search results cache, queued actions sync when you're back\n- Siri Shortcuts: \"check my queue\", \"sign an IPA\", \"sign my starred apps\"\n- Home Screen widget, Lock Screen/Dynamic Island progress, shake to report a bug\n\nSettings are split into Bot (your ipa-bot server + signing cert) and App (theme, tab order, advanced/restart, danger zone).",
       "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+      "screenshotURLs": [
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/01-search.png",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/02-library.png",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/03-diagnostics.png",
+        "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/04-settings.png"
+      ],
       "tintColor": "EC3013",
       "size": 1835659,
       "minOSVersion": "16.0",
