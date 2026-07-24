@@ -26,10 +26,16 @@ struct SettingsView: View {
     @State private var isNuking = false
     @State private var nukeResultAlert: NukeAlert?
     @State private var showWhatsNew = false
+    @State private var settingsTab: SettingsTab = .bot
 
     struct NukeAlert: Identifiable {
         let id = UUID()
         let message: String
+    }
+
+    private enum SettingsTab: String, CaseIterable, Identifiable {
+        case bot = "Bot", app = "App"
+        var id: String { rawValue }
     }
 
     private let restartableServices = ["finder", "relay", "inject", "botapi", "sniper"]
@@ -50,15 +56,32 @@ struct SettingsView: View {
                             .padding(.horizontal, 20).padding(.bottom, 12)
                     }
 
-                    groupHeader("Bot")
-                    LedgerSectionLabel(text: "Connection")
-                    connectionSection
-
-                    LedgerSectionLabel(text: "Signing certificate")
-                    certSection
-
                     if api.isConfigured {
-                        groupHeader("App")
+                        HStack(spacing: 0) {
+                            ForEach(SettingsTab.allCases) { t in
+                                Button { settingsTab = t } label: {
+                                    Text(t.rawValue.uppercased())
+                                        .font(Ledger.heading(11, weight: .bold)).tracking(0.4)
+                                        .frame(maxWidth: .infinity, minHeight: 44)
+                                        .foregroundColor(settingsTab == t ? Ledger.bg : Ledger.textSecondary)
+                                        .background(settingsTab == t ? Ledger.text : Color.clear)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .overlay(Rectangle().stroke(Ledger.divider, lineWidth: 1))
+                        .padding(.horizontal, 20).padding(.bottom, 4)
+                    }
+
+                    if settingsTab == .bot || !api.isConfigured {
+                        LedgerSectionLabel(text: "Connection")
+                        connectionSection
+
+                        LedgerSectionLabel(text: "Signing certificate")
+                        certSection
+                    }
+
+                    if settingsTab == .app && api.isConfigured {
                         LedgerSectionLabel(text: "Appearance")
                         appearanceSection
 
@@ -93,21 +116,6 @@ struct SettingsView: View {
             .sheet(item: $exportTarget) { target in ShareSheet(items: [target.url]) }
             .sheet(isPresented: $showWhatsNew) { WhatsNewView() }
         }
-    }
-
-    /// Marks the "talking to the server" settings vs. "this device" settings
-    /// with a real visual break — the flat list of thin rows was the "clunky"
-    /// complaint; a rule plus an oversized label reads as two distinct screens.
-    @ViewBuilder
-    private func groupHeader(_ title: String) -> some View {
-        if title != "Bot" {
-            Rectangle().fill(Ledger.divider).frame(height: 1).padding(.top, 20)
-        }
-        Text(title.uppercased())
-            .font(Ledger.heading(20, weight: .black))
-            .foregroundColor(Ledger.text)
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
     }
 
     private var connectionSection: some View {
@@ -231,16 +239,18 @@ struct SettingsView: View {
             .padding(.vertical, 9)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
 
-            Button { showWhatsNew = true } label: {
-                HStack {
-                    Text("What's New in \(WhatsNew.currentVersion)").font(Ledger.body(14)).foregroundColor(Ledger.text)
-                    Spacer()
-                    Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
+            if WhatsNew.currentEntries != nil {
+                Button { showWhatsNew = true } label: {
+                    HStack {
+                        Text("What's New in \(WhatsNew.currentVersion)").font(Ledger.body(14)).foregroundColor(Ledger.text)
+                        Spacer()
+                        Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
+                    }
+                    .frame(minHeight: 44)
                 }
-                .frame(minHeight: 44)
+                .padding(.vertical, 9)
+                .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
             }
-            .padding(.vertical, 9)
-            .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
 
             HStack {
                 Text("Your iOS version").font(Ledger.body(14)).foregroundColor(Ledger.text)
