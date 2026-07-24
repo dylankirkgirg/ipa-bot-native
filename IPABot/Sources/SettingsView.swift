@@ -122,6 +122,7 @@ struct SettingsView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .frame(minHeight: 44)
                 .padding(.vertical, 9)
                 .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
                 .padding(.horizontal, 20)
@@ -209,7 +210,7 @@ struct SettingsView: View {
                     Button { api.theme = t } label: {
                         Text(t.label.uppercased())
                             .font(Ledger.heading(11, weight: .bold)).tracking(0.4)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, minHeight: 44)
                             .padding(.vertical, 8)
                             .foregroundColor(api.theme == t ? Ledger.bg : Ledger.textSecondary)
                             .background(api.theme == t ? Ledger.text : Color.clear)
@@ -225,6 +226,7 @@ struct SettingsView: View {
                     Spacer()
                     Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
                 }
+                .frame(minHeight: 44)
             }
             .padding(.vertical, 9)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
@@ -235,6 +237,7 @@ struct SettingsView: View {
                     Spacer()
                     Glyph(.chevronRight, size: 13, color: Ledger.textTertiary)
                 }
+                .frame(minHeight: 44)
             }
             .padding(.vertical, 9)
             .overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
@@ -270,6 +273,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { Task { await runBackup() } } label: {
                 HStack { Glyph(.share, size: 15, color: Ledger.textSecondary); Text("Back up now").font(Ledger.body(14)).foregroundColor(Ledger.text) }
+                    .frame(minHeight: 44)
             }
             .disabled(isBusyAdvanced)
             .padding(.vertical, 9)
@@ -277,6 +281,7 @@ struct SettingsView: View {
 
             Button { Task { await runExport() } } label: {
                 HStack { Glyph(.download, size: 15, color: Ledger.textSecondary); Text("Export state (.json)").font(Ledger.body(14)).foregroundColor(Ledger.text) }
+                    .frame(minHeight: 44)
             }
             .disabled(isBusyAdvanced)
             .padding(.vertical, 9)
@@ -287,6 +292,7 @@ struct SettingsView: View {
                     Glyph(.gear, size: 15, color: Ledger.textSecondary)
                     Text("Check tweak repos").font(Ledger.body(14)).foregroundColor(Ledger.text)
                 }
+                .frame(minHeight: 44)
             }
             .disabled(isBusyAdvanced)
             .padding(.vertical, 9)
@@ -300,6 +306,7 @@ struct SettingsView: View {
                         Spacer()
                         if restartingService == service { ProgressView() }
                     }
+                    .frame(minHeight: 44)
                 }
                 .disabled(isBusyAdvanced)
                 .padding(.vertical, 9)
@@ -338,6 +345,7 @@ struct SettingsView: View {
                     if isNuking { ProgressView() } else { Image(systemName: "trash.fill").foregroundColor(Ledger.accent) }
                     Text("Wipe all state").font(Ledger.body(14)).foregroundColor(Ledger.accent)
                 }
+                .frame(minHeight: 44)
             }
             .disabled(isNuking)
             .padding(.vertical, 9)

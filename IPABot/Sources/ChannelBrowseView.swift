@@ -23,6 +23,7 @@ struct ChannelBrowseView: View {
                             ForEach(available, id: \.self) { ch in
                                 Button(ch) { Task { await load(ch) } }
                                     .font(Ledger.mono(12))
+                                    .frame(minHeight: 44)
                                     .foregroundColor(selected == ch ? Ledger.bg : Ledger.textSecondary)
                                     .padding(.horizontal, 10).padding(.vertical, 6)
                                     .background(selected == ch ? Ledger.text : Color.clear)

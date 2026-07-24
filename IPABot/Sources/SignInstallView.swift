@@ -26,7 +26,7 @@ struct SignInstallView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     if let cert {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("SIGNING WITH").font(Ledger.heading(10, weight: .bold)).tracking(0.6).foregroundColor(Ledger.ok)
+                            Text("SIGNING WITH").font(Ledger.heading(11, weight: .bold)).tracking(0.6).foregroundColor(Ledger.ok)
                             Text(cert.name ?? "configured").font(Ledger.mono(13)).foregroundColor(Ledger.text)
                             if let expiry = cert.expiry {
                                 Text("Expires \(expiry)").font(Ledger.body(11)).foregroundColor(Ledger.textSecondary)
@@ -138,7 +138,7 @@ struct SignInstallView: View {
         Button(action: action) {
             Text(title.uppercased())
                 .font(Ledger.heading(12, weight: .bold)).tracking(0.4)
-                .frame(maxWidth: .infinity).padding(.vertical, 9)
+                .frame(maxWidth: .infinity, minHeight: 44).padding(.vertical, 9)
                 .foregroundColor(isOn ? Ledger.bg : Ledger.textSecondary)
                 .background(isOn ? Ledger.text : Color.clear)
         }

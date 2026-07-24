@@ -107,10 +107,13 @@ struct SearchView: View {
                                     Image(systemName: selected.contains(hit.id) ? "checkmark.circle.fill" : "circle")
                                         .foregroundColor(selected.contains(hit.id) ? Ledger.accent : Ledger.textTertiary)
                                         .font(Ledger.body(20))
+                                        .accessibilityHidden(true)
                                     row(for: hit, interactive: false)
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityAddTraits(selected.contains(hit.id) ? .isSelected : [])
+                            .accessibilityValue(selected.contains(hit.id) ? "Selected" : "Not selected")
                         } else if hit.bundle_id.isEmpty {
                             row(for: hit)
                         } else {

@@ -82,7 +82,7 @@ struct DiagnosticsView: View {
     private func stat(_ value: String, _ label: String, mono: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value).font(mono ? Ledger.mono(18, weight: .bold) : Ledger.heading(24)).foregroundColor(Ledger.text).lineLimit(1)
-            Text(label).font(Ledger.mono(10)).foregroundColor(Ledger.textTertiary)
+            Text(label).font(Ledger.mono(11)).foregroundColor(Ledger.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)

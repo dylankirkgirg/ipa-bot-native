@@ -23,6 +23,7 @@ struct AboutView: View {
                         else { Rectangle().fill(Ledger.surface) }
                     }
                     .frame(width: 56, height: 56).clipped()
+                    .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(info.app_name).font(Ledger.heading(15, weight: .semibold)).foregroundColor(Ledger.text)
@@ -65,6 +66,7 @@ struct AboutView: View {
                         Spacer()
                         Glyph(.chevronRight, size: 12, color: Ledger.textTertiary)
                     }
+                    .frame(minHeight: 44)
                 }
                 .padding(.vertical, 9).overlay(alignment: .bottom) { Rectangle().fill(Ledger.dividerSoft).frame(height: 1) }
                 .listRowSeparator(.hidden).listRowBackground(Color.clear)
@@ -75,6 +77,7 @@ struct AboutView: View {
                             Spacer()
                             Glyph(.chevronRight, size: 12, color: Ledger.textTertiary)
                         }
+                        .frame(minHeight: 44)
                     }
                     .padding(.vertical, 9)
                     .listRowSeparator(.hidden).listRowBackground(Color.clear)

@@ -141,7 +141,7 @@ struct LedgerPrimaryButtonStyle: ButtonStyle {
             .textCase(.uppercase)
             .tracking(0.4)
             .foregroundColor(foreground)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .padding(.vertical, 12)
             .padding(.horizontal, 14)
             .background(background.opacity(configuration.isPressed ? 0.82 : 1))
@@ -155,7 +155,7 @@ struct LedgerOutlineButtonStyle: ButtonStyle {
             .textCase(.uppercase)
             .tracking(0.4)
             .foregroundColor(Ledger.text)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .padding(.vertical, 12)
             .padding(.horizontal, 14)
             .background(configuration.isPressed ? Ledger.surface : Color.clear)
@@ -221,6 +221,7 @@ struct LedgerStatusDot: View {
     var ok: Bool
     var body: some View {
         Rectangle().fill(ok ? Ledger.ok : Ledger.accent).frame(width: 8, height: 8)
+            .accessibilityLabel(ok ? "Healthy" : "Needs attention")
     }
 }
 

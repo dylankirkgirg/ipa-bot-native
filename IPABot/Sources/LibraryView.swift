@@ -124,6 +124,7 @@ struct LibraryView: View {
                             .textCase(.uppercase)
                             .tracking(0.4)
                             .padding(.horizontal, 12).padding(.vertical, 7)
+                            .frame(minHeight: 44)
                             .foregroundColor(section == s ? .white : Ledger.textSecondary)
                             .background(section == s ? Ledger.accent : Color.clear)
                             .overlay(Rectangle().stroke(section == s ? Color.clear : Ledger.divider, lineWidth: 1))
@@ -227,6 +228,7 @@ struct LibraryView: View {
                     Spacer()
                     expiryBadge(for: app)
                 }
+                .frame(minHeight: 44)
             }
             .buttonStyle(.plain)
             .padding(.vertical, 8)
@@ -242,7 +244,7 @@ struct LibraryView: View {
         let daysLeft = Int(expiry.timeIntervalSinceNow / 86400)
         let label = daysLeft <= 0 ? "Expired" : "\(daysLeft)d left"
         return Text(label)
-            .font(Ledger.mono(10))
+            .font(Ledger.mono(11))
             .foregroundColor(daysLeft <= 1 ? Ledger.accent : Ledger.textTertiary)
     }
 
@@ -297,7 +299,7 @@ struct LibraryView: View {
                 Glyph(.tray, size: 15, color: Ledger.textSecondary)
                 Text(s.name).font(Ledger.body(14)).foregroundColor(Ledger.text)
                 if s.blacklisted == true {
-                    Text("blacklisted").font(Ledger.mono(10)).foregroundColor(Ledger.accent)
+                    Text("blacklisted").font(Ledger.mono(11)).foregroundColor(Ledger.accent)
                 }
                 Spacer()
             }
