@@ -10,9 +10,9 @@
       "bundleIdentifier": "com.dylankirkgirg.ipabot.native",
       "developerName": "dylankirkgirg",
       "subtitle": "Search, sign, and inject IPAs — no Telegram needed",
-      "version": "1.1.10",
-      "versionDate": "2026-07-24T04:35:00Z",
-      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.10/IPABot-1.1.10-73.ipa",
+      "version": "1.1.11",
+      "versionDate": "2026-07-24T04:57:35Z",
+      "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.11/IPABot-1.1.11-77.ipa",
       "localizedDescription": "The whole ipa-bot pipeline in your pocket. Search every source you've configured, sign and inject in a couple taps, and keep tabs on what's starred, signed, and about to expire — all without opening Telegram.\n\nWHAT IT DOES\n★ Search — every source and channel at once, sorted your way, modded-only filter, offline cache when the server's unreachable\n✒ Sign & Inject — one tap from a result, multi-select for Sign All, tweaks injected before signing\n🔔 Stay ahead — starred apps flag when an update drops, signed apps count down to their 7-day cert expiry with a reminder before it dies\n📦 Library — stars, watches, sources, notes, pins, aliases, TestFlight watches, all in one place\n🗣 Siri — \"check my queue\", \"sign an IPA\", \"sign my starred apps\"\n📲 Widgets & Live Activities — queue depth on your Home Screen, sign/inject/decrypt progress on your Lock Screen and Dynamic Island\n🤫 Offline-tolerant — star toggles queue up and sync themselves once you're back online\n\nSettings split cleanly: BOT (your ipa-bot server + signing cert) vs. APP (theme, tab order, restart, danger zone) — no more digging through one long list.",
       "iconURL": "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
       "screenshotURLs": [
@@ -22,13 +22,20 @@
         "https://raw.githubusercontent.com/dylankirkgirg/ipa-bot-native/master/IPABot/Resources/Screenshots/04-settings.jpg"
       ],
       "tintColor": "EC3013",
-      "size": 1889578,
+      "size": 1921442,
       "minOSVersion": "16.0",
       "appPermissions": {
         "entitlements": [],
         "privacy": {}
       },
       "versions": [
+        {
+          "version": "1.1.11",
+          "date": "2026-07-24T04:57:35Z",
+          "downloadURL": "https://github.com/dylankirkgirg/ipa-bot-native/releases/download/v1.1.11/IPABot-1.1.11-77.ipa",
+          "size": 1921442,
+          "minOSVersion": "16.0"
+        },
         {
           "version": "1.1.10",
           "date": "2026-07-24T04:35:00Z",
